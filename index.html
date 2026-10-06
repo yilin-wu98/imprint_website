@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Project page for Memory Without Curation: Learning Multi-Stream Latent Memory for Robot Policies.">
+  <meta name="author" content="Yilin Wu, Rutav Shah, Shuaiyi Huang, Sumedh A. Sontakke, Homanga Bharadhwaj, Andrea Bajcsy, Max Simchowitz, Guanya Shi">
+  <title>Memory Without Curation: Learning Multi-Stream Latent Memory for Robot Policies</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/style.css?v=20261006-public-authors">
+  <script defer src="static/js/main.js?v=20261006-public-site"></script>
+</head>
+<body>
+
+<section class="hero">
+  <div class="container">
+    <h1 class="paper-title">
+      Memory Without Curation:<br>
+      <span class="accent">Learning Multi-Stream Latent Memory for Robot Policies</span>
+    </h1>
+
+    <div class="authors authors-public">
+      <span class="author">Yilin Wu<sup>1,2,†</sup></span>
+      <span class="author">Rutav Shah<sup>1,3</sup></span>
+      <span class="author">Shuaiyi Huang<sup>1</sup></span>
+      <span class="author">Sumedh A. Sontakke<sup>1</sup></span>
+      <span class="author">Homanga Bharadhwaj<sup>1,4</sup></span>
+      <span class="author">Andrea Bajcsy<sup>2</sup></span>
+      <span class="author">Max Simchowitz<sup>1,2</sup></span>
+      <span class="author">Guanya Shi<sup>1,2</sup></span>
+    </div>
+
+    <div class="affiliations affiliations-public">
+      <span><sup>1</sup>Amazon FAR</span>
+      <span><sup>2</sup>Carnegie Mellon University</span>
+      <span><sup>3</sup>The University of Texas at Austin</span>
+      <span><sup>4</sup>Johns Hopkins University</span>
+      <span class="author-note"><sup>†</sup>Work done during the internship at Amazon FAR</span>
+    </div>
+
+    <div class="links">
+      <a class="btn" href="static/paper/paper.pdf" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        Paper
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt" id="method">
+  <div class="container-wide">
+    <p class="section-kicker">Approach</p>
+    <h2>Method</h2>
+    <p class="section-subtitle">
+      IMPRINT compresses visual, action, and proprioceptive history into a fixed-size
+      latent memory, bootstraps that memory with reconstruction and task-progress
+      supervision, and then jointly adapts it with a VLA for control.
+    </p>
+
+    <figure class="method-overview">
+      <div class="method-image-scroll">
+        <img
+          src="static/images/method-overview.png"
+          alt="Overview of multi-stream history tokenization, memory bootstrapping, and joint adaptation with a vision-language-action model"
+          loading="lazy"
+          decoding="async"
+        >
+      </div>
+      <figcaption>
+        Visual history is tokenized alongside executed actions and proprioceptive states.
+        A memory encoder compresses these streams into latent tokens; Stage 1 reconstructs
+        sampled history and estimates task progress, while Stage 2 jointly adapts the memory
+        and VLA for action generation.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="section" id="results-overview">
+  <div class="container-wide">
+    <p class="section-kicker">Experiments</p>
+    <h2>Result Highlights</h2>
+
+    <div class="result-highlight-grid" aria-label="Three result-highlight panels from the paper">
+      <figure class="result-highlight-panel">
+        <img
+          src="static/images/result-highlight-latency.png"
+          alt="Success versus inference latency result highlight"
+          loading="lazy"
+          decoding="async"
+        >
+      </figure>
+      <figure class="result-highlight-panel">
+        <img
+          src="static/images/result-highlight-backbones.png"
+          alt="Success improvements across three VLA backbones"
+          loading="lazy"
+          decoding="async"
+        >
+      </figure>
+      <figure class="result-highlight-panel">
+        <img
+          src="static/images/result-highlight-task-types.png"
+          alt="Success improvements on non-memory and memory task groups"
+          loading="lazy"
+          decoding="async"
+        >
+      </figure>
+    </div>
+
+    <div class="contributions-highlight">
+      <h3 class="contributions-title">Contributions</h3>
+      <ol class="contributions-list">
+        <li>
+          <span class="contribution-number" aria-hidden="true">1</span>
+          <p>
+            We propose <strong>IMPRINT</strong>, a <strong>policy-agnostic</strong> latent
+            memory framework that efficiently compresses <strong>multi-stream histories</strong>
+            and trains with <strong>history reconstruction and progress estimation</strong>
+            before joint fine-tuning with the policy.
+          </p>
+        </li>
+        <li>
+          <span class="contribution-number" aria-hidden="true">2</span>
+          <p>
+            We systematically analyze how <strong>memory capacity, encoding, training
+            objectives, and training recipes</strong> affect downstream performance.
+          </p>
+        </li>
+        <li>
+          <span class="contribution-number" aria-hidden="true">3</span>
+          <p>
+            Across <strong>RMBench, a 12-task RoboCasa benchmark, and three real-world
+            tasks</strong>, IMPRINT improves success over the base VLA by 47.4% on RMBench
+            and 50% in the real world, while achieving the <strong>lowest average latency
+            and highest success</strong> among the memory baselines in the latency comparison.
+          </p>
+        </li>
+      </ol>
+    </div>
+
+    <nav class="experiment-index" aria-label="Experiment sections">
+      <div>
+        <strong>Evaluation</strong>
+        <a href="#rollout-explorer">Real world</a>
+        <a href="#rmbench-results">RMBench</a>
+        <a href="#robocasa-results">RoboCasa</a>
+        <a href="#inference-efficiency">Efficiency</a>
+      </div>
+      <div>
+        <strong>Ablations &amp; analysis</strong>
+        <a href="#memory-encoding">Encoding</a>
+        <a href="#memory-analysis">Attention</a>
+        <a href="#memory-learning">Learning</a>
+      </div>
+    </nav>
+  </div>
+</section>
+
+<section class="section section-alt" id="rollout-explorer">
+  <div class="container-wide">
+    <p class="section-kicker">Evaluation</p>
+    <h2>Real-World Evaluation</h2>
+    <p class="section-subtitle">
+      Select a task, compare the reported result, and browse every associated rollout.
+      Green and red labels indicate success and failure under the paper's evaluation criteria.
+    </p>
+
+    <div class="rollout-shell">
+      <div class="task-tabs" role="tablist" aria-label="Real-world task">
+        <button class="task-tab is-active" type="button" role="tab" aria-selected="true" data-task="dust-table">Dust Table</button>
+        <button class="task-tab" type="button" role="tab" aria-selected="false" data-task="scan-bottle">Scan Bottle</button>
+        <button class="task-tab" type="button" role="tab" aria-selected="false" data-task="fold-cloth">Fold Cloth</button>
+      </div>
+
+      <div class="task-prompt-card realworld-task-prompt" aria-live="polite">
+        <span class="task-prompt-label">Task prompt</span>
+        <p id="realworld-task-prompt">
+          The robot must place the objects down upright, dust the table exactly once, and
+          return the objects upright to the small table in the correct left/right
+          arrangement.
+        </p>
+      </div>
+
+      <div class="rollout-result-overview">
+        <figure class="rollout-result-figure">
+          <img
+            id="rollout-result-image"
+            src="static/images/realworld-dust-table.png"
+            alt="Dust Table success-rate distributions across real-world methods"
+            loading="lazy"
+            decoding="async"
+          >
+        </figure>
+        <div class="rollout-result-copy">
+          <p class="eyebrow">Reported task result</p>
+          <h3 id="rollout-result-title">Dust Table</h3>
+          <p class="result-analysis">
+            <strong>Result analysis</strong>
+            <span id="rollout-result-analysis">
+              IMPRINT reaches 80%, 30 points above uniform sampling; the unseen-object
+              setting reaches 45%.
+            </span>
+          </p>
+          <button class="table-toggle" type="button" aria-expanded="false" aria-controls="rollout-result-values">
+            <span>Show full table</span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>
+          </button>
+          <div class="figure-data" id="rollout-result-values" hidden>
+            <div class="table-scroll">
+              <table class="data-table">
+                <caption id="rollout-result-caption">Dust Table results</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Method</th>
+                    <th scope="col">Success (%)</th>
+                    <th scope="col">Successes / trials</th>
+                  </tr>
+                </thead>
+                <tbody id="rollout-result-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fold-context" id="fold-context" hidden>
+        <div class="subsection-heading">
+          <div>
+            <p class="eyebrow">In-context example</p>
+            <h3 id="fold-context-title">Orange towel · Style 1 demonstration</h3>
+          </div>
+          <p id="fold-context-summary">
+            Automatically matched to the selected rollout’s towel color and folding style.
+          </p>
+        </div>
+        <figure class="fold-context-example">
+          <div class="fold-context-video-frame">
+            <video
+              id="fold-context-video"
+              controls
+              playsinline
+              preload="none"
+              data-preload="metadata"
+            ></video>
+            <span>Matched demonstration</span>
+          </div>
+          <figcaption id="fold-context-caption">
+            Orange towel · Style 1 · Head, left wrist, and right wrist views
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="rollout-controls">
+        <div class="control-heading">
+          <div>
+            <p class="eyebrow">Method</p>
+            <h3 id="method-name">IMPRINT</h3>
+          </div>
+          <p class="rollout-score" id="rollout-score" aria-live="polite">16 / 20 successful</p>
+        </div>
+        <label class="sr-only" for="method-slider">Select method</label>
+        <input class="method-slider" id="method-slider" type="range" min="0" max="5" step="1" value="4">
+        <div class="method-scale" id="method-scale" aria-hidden="true"></div>
+      </div>
+
+      <div class="rollout-layout">
+        <div class="rollout-player">
+          <div class="video-frame">
+            <video
+              id="rollout-video"
+              controls
+              playsinline
+              preload="none"
+              data-src="static/videos/rollouts/ours/dust-table/trial-01.mp4?v=20261002-hd"
+            ></video>
+            <span class="outcome-badge is-success" id="outcome-badge">Success</span>
+          </div>
+          <div class="rollout-meta">
+            <div>
+              <p class="eyebrow" id="trial-context-label">Dust Table</p>
+              <h3 id="trial-title">Trial 01</h3>
+            </div>
+            <p id="trial-description">IMPRINT · Success</p>
+          </div>
+        </div>
+
+        <div class="trial-browser">
+          <div class="trial-browser-heading">
+            <div>
+              <p class="eyebrow">Associated trials</p>
+              <h3>Select a rollout</h3>
+            </div>
+            <output id="trial-output" for="trial-slider">01 / 20</output>
+          </div>
+          <label class="sr-only" for="trial-slider">Select trial</label>
+          <input class="trial-slider" id="trial-slider" type="range" min="1" max="20" step="1" value="1">
+          <div class="trial-grid" id="trial-grid"></div>
+          <div class="fold-trial-matrix" id="fold-trial-matrix" hidden></div>
+          <p class="trial-key"><span class="key-dot success"></span> Success <span class="key-dot failure"></span> Failure</p>
+          <div class="trial-failure-detail" id="trial-failure-detail" aria-live="polite" hidden>
+            <span>Failure reason</span>
+            <p id="trial-failure-reason"></p>
+          </div>
+          <button
+            class="memer-trace-toggle"
+            id="memer-trace-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="memer-trace-panel"
+            hidden
+          >
+            <span id="memer-trace-toggle-label">Show example keyframe trace</span>
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="m5 7.5 5 5 5-5"/>
+            </svg>
+          </button>
+        </div>
+
+        <section
+          class="memer-trace-panel"
+          id="memer-trace-panel"
+          aria-labelledby="memer-trace-title"
+          hidden
+        >
+          <div class="memer-trace-heading">
+            <div>
+              <p class="eyebrow">Representative example</p>
+              <h3 id="memer-trace-title">MemER keyframes and predicted subtask</h3>
+            </div>
+            <output id="memer-trace-status" for="memer-trace-slider">
+              Checkpoint 1 of 7 · 15.3 s
+            </output>
+          </div>
+
+          <div class="memer-trace-focus">
+            <figure class="memer-trace-keyframe">
+              <img id="memer-trace-image" alt="">
+              <figcaption id="memer-trace-image-caption">Newest retained keyframe</figcaption>
+            </figure>
+            <div class="memer-trace-prediction">
+              <span>Accepted MemER prediction</span>
+              <p id="memer-trace-prediction"></p>
+              <dl>
+                <div>
+                  <dt>Observation step</dt>
+                  <dd id="memer-trace-observation"></dd>
+                </div>
+                <div>
+                  <dt>Retained keyframes</dt>
+                  <dd id="memer-trace-count"></dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          <div class="memer-trace-scrubber">
+            <label for="memer-trace-slider">Drag through the episode checkpoints</label>
+            <input id="memer-trace-slider" type="range" min="0" max="6" step="1" value="0">
+          </div>
+
+          <div class="memer-trace-memory">
+            <p>Retained keyframe bank</p>
+            <div class="memer-keyframe-bank" id="memer-keyframe-bank"></div>
+          </div>
+          <p class="memer-trace-note">
+            Each checkpoint shows the recorded memory state and accepted subtask prediction from one representative episode.
+          </p>
+        </section>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="rmbench-results">
+  <div class="container-wide">
+    <p class="section-kicker">Evaluation</p>
+    <h2>RMBench Simulation Results</h2>
+    <p class="section-subtitle">
+      Per-task and average success on the nine memory-dependent tasks in RMBench.
+    </p>
+
+    <figure class="results-figure">
+      <img
+        src="static/images/rmbench.png"
+        alt="RMBench task success distributions for no-memory, heuristic, hierarchical, latent, and proposed memory methods"
+        loading="lazy"
+        decoding="async"
+      >
+      <button class="table-toggle" type="button" aria-expanded="false" aria-controls="rmbench-values">
+        <span>Show full table</span>
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>
+      </button>
+      <div class="figure-data" id="rmbench-values" hidden>
+        <div class="table-scroll">
+          <table class="data-table">
+            <caption>RMBench task success rate (%)</caption>
+            <thead>
+              <tr>
+                <th scope="col">Method</th>
+                <th scope="col">Obs. / Pick</th>
+                <th scope="col">Rearrange</th>
+                <th scope="col">Put Back</th>
+                <th scope="col">Swap Blocks</th>
+                <th scope="col">Swap T</th>
+                <th scope="col">Battery</th>
+                <th scope="col">Ranking</th>
+                <th scope="col">Cover</th>
+                <th scope="col">Press</th>
+                <th scope="col">Average</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">π<sub>0.5</sub></th><td>8</td><td>63</td><td>20</td><td>16</td><td>8</td><td>30</td><td>66</td><td>15</td><td>3</td><td>25.4</td></tr>
+              <tr><th scope="row">Uniform sampling</th><td>5</td><td>79</td><td>100</td><td>62</td><td>30</td><td>28</td><td>82</td><td>13</td><td>3</td><td>44.7</td></tr>
+              <tr><th scope="row">EventVLA</th><td>21</td><td>96</td><td>95</td><td>96</td><td>87</td><td>35</td><td>81</td><td>97</td><td>3</td><td>67.8</td></tr>
+              <tr><th scope="row">MemER</th><td>7</td><td>17</td><td>0</td><td>14</td><td>7</td><td>27</td><td>0</td><td>6</td><td>0</td><td>8.7</td></tr>
+              <tr><th scope="row">Mem-0</th><td>4</td><td>89</td><td>90</td><td>67</td><td>14</td><td>28</td><td>18</td><td>68</td><td>0</td><td>42.0</td></tr>
+              <tr><th scope="row">HAMLET</th><td>6</td><td>76</td><td>23</td><td>25</td><td>13</td><td>26</td><td>70</td><td>14</td><td>0</td><td>28.1</td></tr>
+              <tr><th scope="row">MemoryVLA</th><td>2</td><td>53</td><td>81</td><td>76</td><td>9</td><td>33</td><td>53</td><td>69</td><td>0</td><td>41.7</td></tr>
+              <tr><th scope="row">Ours (full)</th><td>9</td><td>100</td><td>100</td><td>100</td><td>100</td><td>41</td><td>83</td><td>100</td><td>21</td><td>72.7</td></tr>
+              <tr><th scope="row">Ours (recurrent)</th><td>6</td><td>99</td><td>100</td><td>100</td><td>100</td><td>35</td><td>84</td><td>100</td><td>31</td><td>72.8</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <figcaption>
+        Full-attention and recurrent IMPRINT reach 72.7% and 72.8% average success,
+        respectively.
+      </figcaption>
+    </figure>
+
+    <p class="result-analysis">
+      <strong>Result analysis</strong> Recurrent IMPRINT leads the strongest baseline by
+      5.0 points and reaches 99–100% on five tasks; remaining errors cluster in
+      Observe / Pick, Battery, and Press Button.
+    </p>
+
+    <div class="simulation-rollout-explorer">
+      <div class="subsection-heading">
+        <div>
+          <p class="eyebrow">Evaluation rollouts</p>
+          <h3>Representative RMBench trials</h3>
+        </div>
+        <p>Choose a task and drag the method bar to compare logged evaluations.</p>
+      </div>
+
+      <div class="simulation-controls">
+        <label for="rmbench-task-select">
+          <span>Task</span>
+          <select id="rmbench-task-select">
+            <option value="observe-pick">Observe / Pick</option>
+            <option value="rearrange">Rearrange</option>
+            <option value="put-back">Put Back</option>
+            <option value="swap-blocks">Swap Blocks</option>
+            <option value="swap-t">Swap T</option>
+            <option value="battery">Battery</option>
+            <option value="ranking">Block Ranking</option>
+            <option value="cover-blocks">Cover Blocks</option>
+            <option value="press-button">Press Button</option>
+          </select>
+        </label>
+        <div class="simulation-method-control">
+          <div class="simulation-method-heading">
+            <span>Method</span>
+            <strong id="rmbench-method-name">Ours (recurrent)</strong>
+            <output id="rmbench-success-rate" for="rmbench-method-slider">6%</output>
+          </div>
+          <label class="sr-only" for="rmbench-method-slider">Select RMBench method</label>
+          <input id="rmbench-method-slider" type="range" min="0" max="2" step="1" value="0">
+          <div class="simulation-method-scale" id="rmbench-method-scale" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <div class="task-prompt-card" aria-live="polite">
+        <span class="task-prompt-label">Task prompt</span>
+        <p id="rmbench-task-prompt">
+          Pick the object matching a target shown before occlusion.
+        </p>
+      </div>
+
+      <div class="simulation-video-grid">
+        <figure class="simulation-video-card" id="rmbench-success-card">
+          <div class="simulation-video-frame">
+            <video
+              id="rmbench-success-video"
+              controls
+              playsinline
+              preload="none"
+              data-src="static/videos/rmbench/ours/observe-pick/success.mp4"
+            ></video>
+            <span class="outcome-badge is-success">Success</span>
+          </div>
+          <figcaption>Representative successful rollout</figcaption>
+        </figure>
+        <figure class="simulation-video-card" id="rmbench-failure-card">
+          <div class="simulation-video-frame">
+            <video
+              id="rmbench-failure-video"
+              controls
+              playsinline
+              preload="none"
+              data-src="static/videos/rmbench/ours/observe-pick/failure.mp4"
+            ></video>
+            <span class="outcome-badge is-failure">Failure</span>
+          </div>
+          <figcaption>Representative failed rollout</figcaption>
+        </figure>
+      </div>
+      <p class="simulation-video-note">
+        One valid logged camera mosaic is shown for each available outcome. Aggregate
+        rates are computed from all 100 evaluation trials.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt" id="robocasa-results">
+  <div class="container-wide">
+    <p class="section-kicker">Evaluation</p>
+    <h2>RoboCasa: Memory and Non-Memory Tasks</h2>
+    <p class="section-subtitle">
+      Average success on memory-dependent and memory-free task groups in RoboCasa.
+    </p>
+
+    <figure class="results-figure">
+      <img
+        src="static/images/robocasa.png"
+        alt="RoboCasa success distributions for non-memory, memory, and overall task groups"
+        loading="lazy"
+        decoding="async"
+      >
+      <button class="table-toggle" type="button" aria-expanded="false" aria-controls="robocasa-values">
+        <span>Show full table</span>
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>
+      </button>
+      <div class="figure-data" id="robocasa-values" hidden>
+        <div class="table-scroll">
+          <table class="data-table">
+            <caption>RoboCasa per-task success rate (%)</caption>
+            <thead>
+              <tr>
+                <th scope="col">Task</th>
+                <th scope="col">Type</th>
+                <th scope="col">π<sub>0.5</sub></th>
+                <th scope="col">Heuristic action expert</th>
+                <th scope="col">Heuristic VLM context</th>
+                <th scope="col">Ours (full)</th>
+                <th scope="col">Ours (recurrent)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Retrieve fruit</th><td>Memory</td><td>42</td><td>88</td><td>60</td><td>84</td><td>90</td></tr>
+              <tr><th scope="row">Retrieve oil</th><td>Memory</td><td>48</td><td>98</td><td>50</td><td>76</td><td>80</td></tr>
+              <tr><th scope="row">Wash and return left/right</th><td>Memory</td><td>46</td><td>58</td><td>46</td><td>86</td><td>96</td></tr>
+              <tr><th scope="row">Wash and return same location</th><td>Memory</td><td>46</td><td>36</td><td>44</td><td>62</td><td>58</td></tr>
+              <tr><th scope="row">Rinse cutting board</th><td>Memory</td><td>4</td><td>8</td><td>0</td><td>0</td><td>4</td></tr>
+              <tr><th scope="row">Sweeten hot chocolate</th><td>Memory</td><td>46</td><td>36</td><td>34</td><td>58</td><td>64</td></tr>
+              <tr><th scope="row">Pan transfer</th><td>Non-memory</td><td>74</td><td>48</td><td>44</td><td>76</td><td>72</td></tr>
+              <tr><th scope="row">Frying pan adjustment</th><td>Non-memory</td><td>76</td><td>52</td><td>22</td><td>72</td><td>70</td></tr>
+              <tr><th scope="row">Organize condiments</th><td>Non-memory</td><td>72</td><td>32</td><td>48</td><td>62</td><td>74</td></tr>
+              <tr><th scope="row">Place equal ice cubes</th><td>Non-memory</td><td>16</td><td>6</td><td>6</td><td>6</td><td>20</td></tr>
+              <tr><th scope="row">Scrub cutting board</th><td>Non-memory</td><td>60</td><td>50</td><td>56</td><td>66</td><td>76</td></tr>
+              <tr><th scope="row">Move from counter to sink</th><td>Non-memory</td><td>96</td><td>74</td><td>88</td><td>98</td><td>96</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <figcaption>
+        Recurrent IMPRINT reaches 65.3% on memory tasks and 68.0% on non-memory tasks,
+        for 66.7% overall.
+      </figcaption>
+    </figure>
+    <p class="result-analysis">
+      <strong>Result analysis</strong> Heuristic history helps memory tasks but hurts
+      non-memory tasks. Recurrent IMPRINT improves both, suggesting its latent memory is
+      used only when needed.
+    </p>
+
+    <div class="robocasa-rollout-explorer" id="robocasa-rollouts">
+      <div class="subsection-heading">
+        <div>
+          <p class="eyebrow">Full evaluation archive</p>
+          <h3>Browse RoboCasa rollouts</h3>
+        </div>
+        <p>12 tasks · 5 methods · 50 rollouts · 3 synchronized camera views</p>
+      </div>
+
+      <div class="robocasa-controls">
+        <label class="robocasa-task-control" for="robocasa-task-select">
+          <span>Task</span>
+          <select id="robocasa-task-select" disabled>
+            <option value="retrieve_fruit">Retrieve Fruit</option>
+            <option value="retrieve_oil">Retrieve Oil</option>
+            <option value="wash_and_return">Wash and Return (Left / Right)</option>
+            <option value="wash_and_return_same_location">Wash and Return (Same Location)</option>
+            <option value="rinse_cutting_board">Rinse Cutting Board</option>
+            <option value="sweeten_hot_chocolate">Sweeten Hot Chocolate</option>
+            <option value="pan_transfer">Pan Transfer</option>
+            <option value="frying_pan_adjustment">Frying Pan Adjustment</option>
+            <option value="organize_condiments">Organize Condiments</option>
+            <option value="place_equal_ice_cubes">Place Equal Ice Cubes</option>
+            <option value="scrub_cutting_board">Scrub Cutting Board</option>
+            <option value="pick_place_counter_to_sink">Move from Counter to Sink</option>
+          </select>
+        </label>
+
+        <div class="robocasa-method-control">
+          <div class="robocasa-method-heading">
+            <span>Method</span>
+            <strong id="robocasa-method-name">Ours (recurrent)</strong>
+            <output id="robocasa-method-rate" for="robocasa-method-slider">Archive: 45 / 50 successes</output>
+          </div>
+          <label class="sr-only" for="robocasa-method-slider">Select RoboCasa method</label>
+          <input id="robocasa-method-slider" type="range" min="0" max="4" step="1" value="4" disabled>
+          <div class="robocasa-method-scale" id="robocasa-method-scale" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <div class="task-prompt-card" aria-live="polite">
+        <span class="task-prompt-label">Task prompt</span>
+        <p id="robocasa-task-prompt">
+          Place the {fruit} in the sink; recall which side of the sink it was observed on.
+        </p>
+      </div>
+
+      <div class="robocasa-rollout-summary" aria-live="polite">
+        <div>
+          <p class="eyebrow" id="robocasa-task-type">Memory task</p>
+          <h3 id="robocasa-rollout-title">Retrieve Fruit · Rollout 01</h3>
+          <p id="robocasa-rollout-variant">Mem Fruit In Sink Left Far · episode 000</p>
+        </div>
+        <span class="archive-outcome is-success" id="robocasa-current-outcome">Success</span>
+      </div>
+
+      <div class="robocasa-video-grid">
+        <figure class="robocasa-video-card">
+          <div class="robocasa-video-frame">
+            <video id="robocasa-video-left" controls muted playsinline preload="none"></video>
+            <span class="outcome-badge robocasa-outcome-badge is-success">Success</span>
+          </div>
+          <figcaption>Left agent view</figcaption>
+        </figure>
+        <figure class="robocasa-video-card">
+          <div class="robocasa-video-frame">
+            <video id="robocasa-video-right" controls muted playsinline preload="none"></video>
+            <span class="outcome-badge robocasa-outcome-badge is-success">Success</span>
+          </div>
+          <figcaption>Right agent view</figcaption>
+        </figure>
+        <figure class="robocasa-video-card">
+          <div class="robocasa-video-frame">
+            <video id="robocasa-video-wrist" controls muted playsinline preload="none"></video>
+            <span class="outcome-badge robocasa-outcome-badge is-success">Success</span>
+          </div>
+          <figcaption>Wrist view</figcaption>
+        </figure>
+      </div>
+
+      <div class="robocasa-trial-browser">
+        <div class="robocasa-trial-heading">
+          <div>
+            <p class="eyebrow">Associated rollouts</p>
+            <h3>Select a trial</h3>
+          </div>
+          <output id="robocasa-trial-output" for="robocasa-trial-slider">01 / 50</output>
+        </div>
+        <label class="sr-only" for="robocasa-trial-slider">Select RoboCasa trial</label>
+        <input id="robocasa-trial-slider" type="range" min="0" max="49" step="1" value="0" disabled>
+        <div class="robocasa-trial-grid" id="robocasa-trial-grid"></div>
+        <p class="trial-key">
+          <span class="key-dot success"></span> Success
+          <span class="key-dot failure"></span> Failure
+        </p>
+      </div>
+
+      <p class="robocasa-archive-note">
+        The three views are synchronized and show the same rollout. Success and failure
+        labels follow the supplied archive manifest.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="inference-efficiency">
+  <div class="container">
+    <p class="section-kicker">Evaluation</p>
+    <h2>Success vs. Inference Efficiency</h2>
+    <p class="section-subtitle">
+      Average RMBench success versus inference latency per action chunk.
+    </p>
+
+    <figure class="results-figure results-figure-narrow">
+      <img
+        src="static/images/inference.png"
+        alt="Inference runtime versus average RMBench success rate"
+        loading="lazy"
+        decoding="async"
+      >
+      <button class="table-toggle" type="button" aria-expanded="false" aria-controls="inference-values">
+        <span>Show full table</span>
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>
+      </button>
+      <div class="figure-data" id="inference-values" hidden>
+        <div class="table-scroll">
+          <table class="data-table">
+            <caption>RMBench success and inference runtime</caption>
+            <thead><tr><th scope="col">Method</th><th scope="col">Success (%)</th><th scope="col">Runtime (ms)</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">π<sub>0.5</sub> (no memory)</th><td>25.4</td><td>91.0</td></tr>
+              <tr><th scope="row">HAMLET</th><td>28.1</td><td>144.9</td></tr>
+              <tr><th scope="row">MemoryVLA (QwenOFT)</th><td>41.7</td><td>321.6</td></tr>
+              <tr><th scope="row">EventVLA</th><td>67.8</td><td>960.0</td></tr>
+              <tr><th scope="row">Ours (full attention)</th><td>72.7</td><td>130.8</td></tr>
+              <tr><th scope="row">Ours (recurrent)</th><td>72.8</td><td>122.8</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <figcaption>
+        Recurrent IMPRINT reaches 72.8% success at 122.8 ms per action chunk.
+      </figcaption>
+    </figure>
+    <p class="result-analysis">
+      <strong>Result analysis</strong> Recurrent IMPRINT achieves the best success–latency
+      tradeoff: 72.8% success at 122.8 ms, only 31.8 ms slower than the no-memory policy
+      and faster than full attention.
+    </p>
+  </div>
+</section>
+
+<section class="section section-alt" id="memory-encoding">
+  <div class="container-wide">
+    <p class="section-kicker">Ablations &amp; analysis</p>
+    <h2>Memory Encoding</h2>
+    <p class="section-subtitle">
+      Memory bottleneck capacity and full-attention versus recurrent encoding.
+    </p>
+
+    <div class="figure-grid">
+      <figure class="figure-card">
+        <h3 class="figure-plot-title">Memory Capacity</h3>
+        <img
+          src="static/images/capacity.png"
+          alt="Success rate as the latent-memory bottleneck scales from 1 to 1024 tokens"
+          loading="lazy"
+          decoding="async"
+        >
+        <button class="table-toggle" type="button" aria-expanded="false" aria-controls="capacity-values">
+          <span>Show full table</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>
+        </button>
+        <div class="figure-data" id="capacity-values" hidden>
+          <div class="table-scroll">
+            <table class="data-table">
+              <caption>Per-task success rate by memory bottleneck size (%)</caption>
+              <thead><tr><th scope="col">Task</th><th scope="col">Benchmark</th><th scope="col">Type</th><th scope="col">1 token</th><th scope="col">4 tokens</th><th scope="col">16 tokens</th><th scope="col">64 tokens</th><th scope="col">256 tokens</th><th scope="col">1024 tokens</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Obs. / Pick</th><td>RMBench</td><td>Memory</td><td>7</td><td>8</td><td>8</td><td>8</td><td>9</td><td>10</td></tr>
+                <tr><th scope="row">Rearrange</th><td>RMBench</td><td>Memory</td><td>100</td><td>100</td><td>100</td><td>100</td><td>100</td><td>99</td></tr>
+                <tr><th scope="row">Put Back</th><td>RMBench</td><td>Memory</td><td>100</td><td>100</td><td>100</td><td>100</td><td>100</td><td>100</td></tr>
+                <tr><th scope="row">Swap Blocks</th><td>RMBench</td><td>Memory</td><td>97</td><td>97</td><td>99</td><td>99</td><td>100</td><td>93</td></tr>
+                <tr><th scope="row">Swap T</th><td>RMBench</td><td>Memory</td><td>99</td><td>99</td><td>99</td><td>99</td><td>100</td><td>99</td></tr>
+                <tr><th scope="row">Battery</th><td>RMBench</td><td>Memory</td><td>33</td><td>40</td><td>44</td><td>39</td><td>41</td><td>46</td></tr>
+                <tr><th scope="row">Ranking</th><td>RMBench</td><td>Memory</td><td>64</td><td>73</td><td>79</td><td>81</td><td>83</td><td>68</td></tr>
+                <tr><th scope="row">Cover</th><td>RMBench</td><td>Memory</td><td>74</td><td>68</td><td>83</td><td>83</td><td>100</td><td>100</td></tr>
+                <tr><th scope="row">Press</th><td>RMBench</td><td>Memory</td><td>29</td><td>18</td><td>15</td><td>26</td><td>21</td><td>15</td></tr>
+                <tr><th scope="row">RMBench average</th><td>RMBench</td><td>Memory</td><td>67.0</td><td>67.0</td><td>69.7</td><td>70.6</td><td>72.7</td><td>70.0</td></tr>
+                <tr><th scope="row">Retrieve fruit</th><td>RoboCasa</td><td>Memory</td><td>—</td><td>80</td><td>74</td><td>80</td><td>84</td><td>—</td></tr>
+                <tr><th scope="row">Retrieve oil</th><td>RoboCasa</td><td>Memory</td><td>—</td><td>66</td><td>78</td><td>70</td><td>76</td><td>—</td></tr>
+                <tr><th scope="row">Wash and return</th><td>RoboCasa</td><td>Memory</td><td>—</td><td>92</td><td>84</td><td>82</td><td>86</td><td>—</td></tr>
+                <tr><th scope="row">Wash and return same location</th><td>RoboCasa</td><td>Memory</td><td>—</td><td>46</td><td>62</td><td>60</td><td>62</td><td>—</td></tr>
+                <tr><th scope="row">Rinse cutting board</th><td>RoboCasa</td><td>Memory</td><td>—</td><td>0</td><td>0</td><td>0</td><td>0</td><td>—</td></tr>
+                <tr><th scope="row">Sweeten hot chocolate</th><td>RoboCasa</td><td>Memory</td><td>—</td><td>40</td><td>44</td><td>54</td><td>58</td><td>—</td></tr>
+                <tr><th scope="row">RoboCasa memory average</th><td>RoboCasa</td><td>Memory</td><td>—</td><td>54.0</td><td>57.0</td><td>57.7</td><td>61.0</td><td>—</td></tr>
+                <tr><th scope="row">Pan transfer</th><td>RoboCasa</td><td>Non-memory</td><td>—</td><td>78</td><td>68</td><td>70</td><td>76</td><td>—</td></tr>
+                <tr><th scope="row">Frying pan adjustment</th><td>RoboCasa</td><td>Non-memory</td><td>—</td><td>58</td><td>58</td><td>58</td><td>72</td><td>—</td></tr>
+                <tr><th scope="row">Organize condiments</th><td>RoboCasa</td><td>Non-memory</td><td>—</td><td>48</td><td>52</td><td>60</td><td>62</td><td>—</td></tr>
+                <tr><th scope="row">Place equal ice cubes</th><td>RoboCasa</td><td>Non-memory</td><td>—</td><td>4</td><td>10</td><td>6</td><td>6</td><td>—</td></tr>
+                <tr><th scope="row">Scrub cutting board</th><td>RoboCasa</td><td>Non-memory</td><td>—</td><td>60</td><td>60</td><td>56</td><td>66</td><td>—</td></tr>
+                <tr><th scope="row">Counter to sink</th><td>RoboCasa</td><td>Non-memory</td><td>—</td><td>98</td><td>94</td><td>96</td><td>98</td><td>—</td></tr>
+                <tr><th scope="row">RoboCasa non-memory average</th><td>RoboCasa</td><td>Non-memory</td><td>—</td><td>57.7</td><td>57.0</td><td>57.7</td><td>63.3</td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-scroll supplemental-table">
+            <table class="data-table">
+              <caption>Stage-1 validation losses by memory capacity</caption>
+              <thead><tr><th scope="col">Tokens</th><th scope="col">Total ×10<sup>−2</sup></th><th scope="col">Vision ×10<sup>−2</sup></th><th scope="col">Action ×10<sup>−4</sup></th><th scope="col">State ×10<sup>−4</sup></th><th scope="col">Progress ×10<sup>−4</sup></th></tr></thead>
+              <tbody>
+                <tr><th scope="row">1</th><td>3.649 ± 0.295</td><td>3.599</td><td>2.37</td><td>2.43</td><td>5.13</td></tr>
+                <tr><th scope="row">4</th><td>3.308 ± 0.273</td><td>3.278</td><td>1.31</td><td>1.35</td><td>3.31</td></tr>
+                <tr><th scope="row">16</th><td>3.406 ± 0.277</td><td>3.368</td><td>1.50</td><td>1.55</td><td>4.41</td></tr>
+                <tr><th scope="row">64</th><td>3.389 ± 0.282</td><td>3.359</td><td>1.50</td><td>1.52</td><td>2.94</td></tr>
+                <tr><th scope="row">256</th><td>3.338 ± 0.280</td><td>3.311</td><td>1.27</td><td>1.31</td><td>2.81</td></tr>
+                <tr><th scope="row">1024</th><td>3.256 ± 0.270</td><td>3.232</td><td>1.08</td><td>1.10</td><td>2.63</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <figcaption>
+          Performance and Stage-1 supervision loss as the bottleneck scales from 1 to
+          1024 latent tokens.
+        </figcaption>
+        <p class="result-analysis">
+          <strong>Result analysis</strong> Success rises from 67.0% with one token to
+          72.7% with 256. At 1024 tokens, reconstruction loss improves but success falls
+          to 70.0%, so lower loss does not guarantee better control.
+        </p>
+      </figure>
+
+      <figure class="figure-card">
+        <h3 class="figure-plot-title">Full Attention vs. Recurrent Encoding</h3>
+        <img
+          src="static/images/recurrent.png?v=20261002-cropped-title"
+          alt="Beta-posterior success distributions for full-attention and recurrent memory encoding on RMBench and RoboCasa"
+          loading="lazy"
+          decoding="async"
+        >
+        <button class="table-toggle" type="button" aria-expanded="false" aria-controls="recurrent-values">
+          <span>Show full table</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>
+        </button>
+        <div class="figure-data" id="recurrent-values" hidden>
+          <div class="table-scroll">
+            <table class="data-table">
+              <caption>Per-task success rate by memory encoder (%)</caption>
+              <thead><tr><th scope="col">Task</th><th scope="col">Benchmark</th><th scope="col">Full attention</th><th scope="col">Recurrent</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Obs. / Pick</th><td>RMBench</td><td>9</td><td>6</td></tr>
+                <tr><th scope="row">Rearrange</th><td>RMBench</td><td>100</td><td>99</td></tr>
+                <tr><th scope="row">Put Back</th><td>RMBench</td><td>100</td><td>100</td></tr>
+                <tr><th scope="row">Swap Blocks</th><td>RMBench</td><td>100</td><td>100</td></tr>
+                <tr><th scope="row">Swap T</th><td>RMBench</td><td>100</td><td>100</td></tr>
+                <tr><th scope="row">Battery</th><td>RMBench</td><td>41</td><td>35</td></tr>
+                <tr><th scope="row">Ranking</th><td>RMBench</td><td>83</td><td>84</td></tr>
+                <tr><th scope="row">Cover</th><td>RMBench</td><td>100</td><td>100</td></tr>
+                <tr><th scope="row">Press</th><td>RMBench</td><td>21</td><td>31</td></tr>
+                <tr><th scope="row">Retrieve fruit</th><td>RoboCasa</td><td>84</td><td>90</td></tr>
+                <tr><th scope="row">Retrieve oil</th><td>RoboCasa</td><td>76</td><td>80</td></tr>
+                <tr><th scope="row">Wash and return left/right</th><td>RoboCasa</td><td>86</td><td>96</td></tr>
+                <tr><th scope="row">Wash and return same location</th><td>RoboCasa</td><td>62</td><td>58</td></tr>
+                <tr><th scope="row">Rinse cutting board</th><td>RoboCasa</td><td>0</td><td>4</td></tr>
+                <tr><th scope="row">Sweeten hot chocolate</th><td>RoboCasa</td><td>58</td><td>64</td></tr>
+                <tr><th scope="row">Pan transfer</th><td>RoboCasa</td><td>76</td><td>72</td></tr>
+                <tr><th scope="row">Frying pan adjustment</th><td>RoboCasa</td><td>72</td><td>70</td></tr>
+                <tr><th scope="row">Organize condiments</th><td>RoboCasa</td><td>62</td><td>74</td></tr>
+                <tr><th scope="row">Place equal ice cubes</th><td>RoboCasa</td><td>6</td><td>20</td></tr>
+                <tr><th scope="row">Scrub cutting board</th><td>RoboCasa</td><td>66</td><td>76</td></tr>
+                <tr><th scope="row">Move from counter to sink</th><td>RoboCasa</td><td>98</td><td>96</td></tr>
+                <tr><th scope="row">RMBench average</th><td>RMBench</td><td>72.7</td><td>72.8</td></tr>
+                <tr><th scope="row">RoboCasa memory average</th><td>RoboCasa</td><td>61.0</td><td>65.3</td></tr>
+                <tr><th scope="row">RoboCasa non-memory average</th><td>RoboCasa</td><td>63.3</td><td>68.0</td></tr>
+                <tr><th scope="row">RoboCasa overall average</th><td>RoboCasa</td><td>62.2</td><td>66.7</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <figcaption>
+          Recurrent encoding matches full attention on RMBench and improves the RoboCasa
+          overall average.
+        </figcaption>
+        <p class="result-analysis">
+          <strong>Result analysis</strong> Recurrent and full attention tie on RMBench.
+          Recurrence raises RoboCasa success from 62.2% to 66.7% while reducing latency
+          from 130.8 to 122.8 ms.
+        </p>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="memory-analysis">
+  <div class="container-wide">
+    <p class="section-kicker">Ablations &amp; analysis</p>
+    <h2>Memory Attention Analysis</h2>
+    <p class="section-subtitle">
+      Cover Blocks analysis using the unsupervised 50–100% history projection and
+      stream attention at step 750.
+    </p>
+
+    <figure class="results-figure analysis-figure">
+      <div class="analysis-image-scroll">
+        <img
+          src="static/images/memory-attention.png?v=20260930-paper-figure"
+          alt="Paper figure comparing E2E, frozen, and adapted memory through t-SNE embeddings, linear-probe and task success, attention over history streams at step 750, and Cover Blocks outcomes"
+          loading="lazy"
+          decoding="async"
+        >
+      </div>
+      <button class="table-toggle" type="button" aria-expanded="false" aria-controls="memory-analysis-values">
+        <span>Show full table</span>
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>
+      </button>
+      <div class="figure-data" id="memory-analysis-values" hidden>
+        <div class="table-scroll">
+          <table class="data-table">
+            <caption>Cover Blocks analysis — 50–100% episode progress; attention query at step 750</caption>
+            <thead><tr><th scope="col">Training</th><th scope="col">t-SNE silhouette S</th><th scope="col">Linear probe (%)</th><th scope="col">Task success (%)</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">E2E</th><td>−0.08</td><td>19.9</td><td>15</td></tr>
+              <tr><th scope="row">Frozen bootstrapped memory</th><td>+0.23</td><td>83.3</td><td>35</td></tr>
+              <tr><th scope="row">Ours (finetuned)</th><td>+0.36</td><td>91.5</td><td>100</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <figcaption>
+        The paper figure compares representation structure, linear-probe and task success,
+        attention over five history streams at step 750, and the resulting Cover Blocks
+        action for E2E, Frozen, and Ours.
+      </figcaption>
+    </figure>
+    <p class="result-analysis">
+      <strong>Result analysis</strong> Across end-to-end, frozen, and jointly adapted
+      memory, probe accuracy rises 19.9% → 83.3% → 91.5% and task success
+      15% → 35% → 100%, linking structured memory to better control.
+    </p>
+
+    <div class="attention-explorer">
+      <div class="subsection-heading">
+        <div>
+          <p class="eyebrow">Interactive attention trace</p>
+          <h3>How attention changes through one Cover Blocks episode</h3>
+        </div>
+        <p>Select a training method and drag the episode timebar.</p>
+      </div>
+      <div class="attention-methods" role="tablist" aria-label="Memory training method">
+        <button type="button" role="tab" aria-selected="false" data-attention-method="e2e">E2E</button>
+        <button type="button" role="tab" aria-selected="false" data-attention-method="frozen">Frozen</button>
+        <button class="is-active" type="button" role="tab" aria-selected="true" data-attention-method="ours">Ours</button>
+      </div>
+      <div class="attention-stage">
+        <img
+          id="attention-frame"
+          src="static/images/attention/ours/frame-00.jpg?v=20260930-clear-labels"
+          alt="Attention visualization for jointly adapted IMPRINT at the beginning of the episode"
+          loading="lazy"
+          decoding="async"
+        >
+      </div>
+      <div class="attention-timeline">
+        <div class="attention-time-labels">
+          <span>Episode start</span>
+          <output id="attention-step" for="attention-slider">Frame 1 / 20</output>
+          <span>Episode end</span>
+        </div>
+        <label class="sr-only" for="attention-slider">Episode progress</label>
+        <input id="attention-slider" type="range" min="0" max="100" step="1" value="0">
+      </div>
+      <p class="attention-note">
+        Current-observation panels show the policy inputs at the selected action step.
+        Highest-attention panels show the top historical item within each stream, with
+        <i>w</i> reporting its attention weight. Action and robot-state selections are
+        visualized using the head-camera frame aligned to the selected timestep.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt" id="memory-learning">
+  <div class="container-wide">
+    <p class="section-kicker">Ablations &amp; analysis</p>
+    <h2>Memory Learning and VLA Flexibility</h2>
+    <p class="section-subtitle">
+      Training-recipe ablations and results across three VLA backbones.
+    </p>
+
+    <div class="figure-grid">
+      <figure class="figure-card">
+        <h3 class="figure-plot-title">Training Recipes</h3>
+        <img
+          src="static/images/training-recipe.png?v=20261002-cropped-title"
+          alt="Posterior violin comparison of end-to-end training, frozen bootstrapped memory, and jointly adapted memory"
+          loading="lazy"
+          decoding="async"
+        >
+        <button class="table-toggle" type="button" aria-expanded="false" aria-controls="training-recipe-values">
+          <span>Show full table</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>
+        </button>
+        <div class="figure-data" id="training-recipe-values" hidden>
+          <div class="table-scroll">
+            <table class="data-table">
+              <caption>Training-recipe ablation — per-task success rate (%)</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Task</th>
+                  <th scope="col">E2E</th>
+                  <th scope="col">Ours (frozen)</th>
+                  <th scope="col">Ours</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Obs. / Pick</th><td>12</td><td>7</td><td>9</td></tr>
+                <tr><th scope="row">Rearrange</th><td>90</td><td>99</td><td>100</td></tr>
+                <tr><th scope="row">Put Back</th><td>100</td><td>100</td><td>100</td></tr>
+                <tr><th scope="row">Swap Blocks</th><td>90</td><td>99</td><td>100</td></tr>
+                <tr><th scope="row">Swap T</th><td>45</td><td>99</td><td>100</td></tr>
+                <tr><th scope="row">Battery</th><td>27</td><td>20</td><td>41</td></tr>
+                <tr><th scope="row">Ranking</th><td>73</td><td>68</td><td>83</td></tr>
+                <tr><th scope="row">Cover</th><td>15</td><td>35</td><td>100</td></tr>
+                <tr><th scope="row">Press</th><td>5</td><td>2</td><td>21</td></tr>
+                <tr><th scope="row">Average</th><td>50.8</td><td>58.8</td><td>72.7</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <figcaption>
+          Multi-stream memory supervision improves over end-to-end action supervision,
+          and joint adaptation improves performance further.
+        </figcaption>
+        <p class="result-analysis">
+          <strong>Result analysis</strong> Supervising memory to retain multiple streams
+          and estimate progress raises average success from 50.8% to 58.8%; joint
+          memory–policy adaptation reaches 72.7%.
+        </p>
+      </figure>
+
+      <figure class="figure-card vla-flexibility-card">
+        <h3 class="figure-plot-title">VLA Flexibility</h3>
+        <img
+          src="static/images/backbones.png"
+          alt="Posterior violin comparison of success with and without memory for pi zero point five, pi zero, and MolmoAct2"
+          loading="lazy"
+          decoding="async"
+        >
+        <button class="table-toggle" type="button" aria-expanded="false" aria-controls="backbone-values">
+          <span>Show full table</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>
+        </button>
+        <div class="figure-data" id="backbone-values" hidden>
+          <div class="table-scroll">
+            <table class="data-table">
+              <caption>Per-task success across VLA backbones (%)</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Task</th>
+                  <th scope="col">π<sub>0.5</sub>: No memory</th>
+                  <th scope="col">π<sub>0.5</sub>: With memory</th>
+                  <th scope="col">π<sub>0</sub>: No memory</th>
+                  <th scope="col">π<sub>0</sub>: With memory</th>
+                  <th scope="col">MolmoAct2: No memory</th>
+                  <th scope="col">MolmoAct2: With memory</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Obs. / Pick</th><td>8</td><td>9</td><td>8</td><td>6</td><td>4</td><td>4</td></tr>
+                <tr><th scope="row">Rearrange</th><td>63</td><td>100</td><td>13</td><td>99</td><td>52</td><td>100</td></tr>
+                <tr><th scope="row">Put Back</th><td>20</td><td>100</td><td>49</td><td>100</td><td>0</td><td>100</td></tr>
+                <tr><th scope="row">Swap Blocks</th><td>16</td><td>100</td><td>4</td><td>100</td><td>11</td><td>65</td></tr>
+                <tr><th scope="row">Swap T</th><td>8</td><td>100</td><td>0</td><td>98</td><td>15</td><td>100</td></tr>
+                <tr><th scope="row">Battery</th><td>30</td><td>41</td><td>27</td><td>30</td><td>7</td><td>5</td></tr>
+                <tr><th scope="row">Ranking</th><td>66</td><td>83</td><td>54</td><td>56</td><td>62</td><td>74</td></tr>
+                <tr><th scope="row">Cover</th><td>15</td><td>100</td><td>0</td><td>78</td><td>18</td><td>83</td></tr>
+                <tr><th scope="row">Press</th><td>3</td><td>21</td><td>2</td><td>0</td><td>0</td><td>6</td></tr>
+                <tr><th scope="row">Average</th><td>25.4</td><td>72.7</td><td>17.4</td><td>63.0</td><td>18.8</td><td>59.7</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <figcaption>
+          The same memory pipeline improves average success for π<sub>0.5</sub>,
+          π<sub>0</sub>, and MolmoAct2.
+        </figcaption>
+        <p class="result-analysis">
+          <strong>Result analysis</strong> Memory improves average success by 47.3, 45.6,
+          and 40.9 points for π<sub>0.5</sub>, π<sub>0</sub>, and MolmoAct2,
+          respectively, showing the approach transfers across VLA backbones.
+        </p>
+      </figure>
+    </div>
+
+    <div class="appendix-result supervision-ablation">
+      <div class="subsection-heading">
+        <div>
+          <p class="eyebrow">Memory supervision ablations</p>
+          <h3>Which inputs and objectives make memory useful?</h3>
+        </div>
+        <p>Full-attention encoder with a fixed 256-token memory bottleneck.</p>
+      </div>
+
+      <figure class="results-figure ablation-pair-figure">
+        <div class="ablation-image-scroll">
+          <img
+            src="static/images/memory-input-objective.png"
+            alt="Side-by-side posterior violin plots comparing historical memory inputs and memory bootstrap objectives"
+            loading="lazy"
+            decoding="async"
+          >
+        </div>
+        <button class="table-toggle" type="button" aria-expanded="false" aria-controls="memory-supervision-values">
+          <span>Show full tables</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>
+        </button>
+        <div class="figure-data" id="memory-supervision-values" hidden>
+          <div class="table-scroll">
+            <table class="data-table">
+              <caption>Historical input-stream ablation on RMBench (%)</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Historical inputs</th>
+                  <th scope="col">Obs. / Pick</th>
+                  <th scope="col">Rearrange</th>
+                  <th scope="col">Put Back</th>
+                  <th scope="col">Swap Blocks</th>
+                  <th scope="col">Swap T</th>
+                  <th scope="col">Battery</th>
+                  <th scope="col">Ranking</th>
+                  <th scope="col">Cover</th>
+                  <th scope="col">Press</th>
+                  <th scope="col">Average</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Vision only</th><td>9</td><td>93</td><td>100</td><td>81</td><td>45</td><td>30</td><td>80</td><td>100</td><td>7</td><td>60.6</td></tr>
+                <tr><th scope="row">Vision + Action</th><td>6</td><td>100</td><td>100</td><td>100</td><td>99</td><td>38</td><td>72</td><td>83</td><td>18</td><td>68.4</td></tr>
+                <tr><th scope="row">Vision + State</th><td>9</td><td>94</td><td>100</td><td>98</td><td>99</td><td>28</td><td>46</td><td>70</td><td>4</td><td>60.9</td></tr>
+                <tr><th scope="row">Vision + Action + State (IMPRINT)</th><td>9</td><td>100</td><td>100</td><td>100</td><td>100</td><td>41</td><td>83</td><td>100</td><td>21</td><td>72.7</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-scroll supplemental-table">
+            <table class="data-table">
+              <caption>Memory bootstrap-objective ablation on RMBench (%)</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Bootstrap objective</th>
+                  <th scope="col">Obs. / Pick</th>
+                  <th scope="col">Rearrange</th>
+                  <th scope="col">Put Back</th>
+                  <th scope="col">Swap Blocks</th>
+                  <th scope="col">Swap T</th>
+                  <th scope="col">Battery</th>
+                  <th scope="col">Ranking</th>
+                  <th scope="col">Cover</th>
+                  <th scope="col">Press</th>
+                  <th scope="col">Average</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">All objectives (IMPRINT)</th><td>9</td><td>100</td><td>100</td><td>100</td><td>100</td><td>41</td><td>83</td><td>100</td><td>21</td><td>72.7</td></tr>
+                <tr><th scope="row">Without progress</th><td>6</td><td>91</td><td>100</td><td>90</td><td>97</td><td>35</td><td>73</td><td>100</td><td>26</td><td>68.7</td></tr>
+                <tr><th scope="row">Visual only</th><td>6</td><td>78</td><td>100</td><td>89</td><td>99</td><td>30</td><td>85</td><td>100</td><td>15</td><td>66.9</td></tr>
+                <tr><th scope="row">Action + state</th><td>5</td><td>100</td><td>100</td><td>89</td><td>98</td><td>36</td><td>61</td><td>52</td><td>23</td><td>62.7</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <figcaption>
+          The left panel ablates which history streams enter memory; the right panel
+          ablates which reconstruction and progress objectives supervise memory.
+        </figcaption>
+      </figure>
+      <p class="result-analysis">
+        <strong>Result analysis</strong> Visual-only memory loses 12.1 points, and
+        visual-only reconstruction loses 5.8 points. Combining visual, action, and state
+        histories with reconstruction and progress supervision performs best at 72.7%.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>IMPRINT project website.</p>
+  </div>
+</footer>
+
+</body>
+</html>
