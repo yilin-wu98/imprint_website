@@ -89,7 +89,7 @@ a:hover {
   color: #fff;
   display: flex;
   isolation: isolate;
-  min-height: 100svh;
+  min-height: 125svh;
   overflow: hidden;
   padding: clamp(4rem, 9vh, 7rem) 1.5rem clamp(3.5rem, 7vh, 5.5rem);
   position: relative;
@@ -103,7 +103,6 @@ a:hover {
   object-fit: cover;
   pointer-events: none;
   position: absolute;
-  transform: scale(1.01);
   width: 100%;
   z-index: 0;
 }
@@ -2124,6 +2123,12 @@ h3 {
 
   .hero-rollout-grid {
     display: none;
+  }
+}
+
+@media (min-width: 701px) and (min-aspect-ratio: 16 / 9) {
+  .hero-rollout-grid {
+    object-fit: contain;
   }
 }
 
