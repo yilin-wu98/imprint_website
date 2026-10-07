@@ -10,13 +10,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="static/css/style.css?v=20261007-hero-grid-3x">
-  <script defer src="static/js/main.js?v=20261006-public-site"></script>
+  <link rel="stylesheet" href="static/css/style.css?v=20261007-hero-playback">
+  <script defer src="static/js/main.js?v=20261007-hero-playback"></script>
 </head>
 <body>
 
 <section class="hero">
   <video
+    id="hero-rollout-grid"
     class="hero-rollout-grid"
     autoplay
     muted
@@ -30,6 +31,15 @@
     tabindex="-1"
   ></video>
   <div class="hero-shade" aria-hidden="true"></div>
+  <button
+    class="hero-playback-fallback"
+    type="button"
+    aria-controls="hero-rollout-grid"
+    hidden
+  >
+    <span aria-hidden="true">▶</span>
+    Play background video
+  </button>
 
   <div class="container hero-foreground">
     <h1 class="paper-title">

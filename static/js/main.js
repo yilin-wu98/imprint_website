@@ -11,6 +11,103 @@ const resolveVideoSource = (source) => {
   return `${productionVideoBase}${source.replace(/^\/+/, "")}`;
 };
 
+const heroRolloutVideo = document.querySelector(".hero-rollout-grid");
+const heroPlaybackFallback = document.querySelector(".hero-playback-fallback");
+let heroPlaybackCheckTimer = null;
+
+const setHeroPlaybackFallbackVisible = (isVisible) => {
+  if (heroPlaybackFallback) {
+    heroPlaybackFallback.hidden = !isVisible;
+  }
+};
+
+const scheduleHeroPlaybackCheck = (delay = 1800) => {
+  if (!heroRolloutVideo) {
+    return;
+  }
+
+  window.clearTimeout(heroPlaybackCheckTimer);
+  heroPlaybackCheckTimer = window.setTimeout(() => {
+    if (heroRolloutVideo.paused && !document.hidden) {
+      setHeroPlaybackFallbackVisible(true);
+    }
+  }, delay);
+};
+
+const attemptHeroPlayback = () => {
+  if (
+    !heroRolloutVideo ||
+    !heroRolloutVideo.getAttribute("src") ||
+    document.hidden
+  ) {
+    return;
+  }
+
+  heroRolloutVideo.muted = true;
+  heroRolloutVideo.defaultMuted = true;
+  heroRolloutVideo.playsInline = true;
+
+  let playRequest;
+
+  try {
+    playRequest = heroRolloutVideo.play();
+  } catch {
+    scheduleHeroPlaybackCheck(300);
+    return;
+  }
+
+  scheduleHeroPlaybackCheck();
+
+  if (playRequest && typeof playRequest.then === "function") {
+    playRequest
+      .then(() => {
+        window.clearTimeout(heroPlaybackCheckTimer);
+        setHeroPlaybackFallbackVisible(false);
+      })
+      .catch(() => {
+        scheduleHeroPlaybackCheck(300);
+      });
+  }
+};
+
+if (heroRolloutVideo) {
+  heroRolloutVideo.muted = true;
+  heroRolloutVideo.defaultMuted = true;
+  heroRolloutVideo.playsInline = true;
+
+  heroRolloutVideo.addEventListener("canplay", attemptHeroPlayback);
+  heroRolloutVideo.addEventListener("playing", () => {
+    window.clearTimeout(heroPlaybackCheckTimer);
+    setHeroPlaybackFallbackVisible(false);
+  });
+  heroRolloutVideo.addEventListener("error", () => {
+    setHeroPlaybackFallbackVisible(true);
+  });
+
+  heroPlaybackFallback?.addEventListener("click", () => {
+    setHeroPlaybackFallbackVisible(false);
+    attemptHeroPlayback();
+  });
+
+  const resumeHeroAfterInteraction = () => {
+    if (heroRolloutVideo.paused) {
+      attemptHeroPlayback();
+    }
+  };
+
+  document.addEventListener("pointerdown", resumeHeroAfterInteraction, {
+    passive: true,
+  });
+  document.addEventListener("keydown", resumeHeroAfterInteraction);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && heroRolloutVideo.paused) {
+      attemptHeroPlayback();
+    }
+  });
+  window.addEventListener("focus", resumeHeroAfterInteraction);
+  window.addEventListener("pageshow", resumeHeroAfterInteraction);
+}
+
 const deferredVideoObserver =
   "IntersectionObserver" in window
     ? new IntersectionObserver(
@@ -32,13 +129,24 @@ const deferredVideoObserver =
 const activateDeferredVideo = (video) => {
   const source = video.dataset.src;
 
-  if (!source || video.getAttribute("src") === source) {
+  if (!source) {
+    return;
+  }
+
+  if (video.getAttribute("src") === source) {
+    if (video === heroRolloutVideo && video.paused) {
+      attemptHeroPlayback();
+    }
     return;
   }
 
   video.preload = video.dataset.preload || "auto";
   video.setAttribute("src", source);
   video.load();
+
+  if (video === heroRolloutVideo) {
+    attemptHeroPlayback();
+  }
 };
 
 const deferVideoSource = (video, source, loadNow = false) => {
@@ -108,7 +216,11 @@ const debounceWithFlush = (callback, delay = 180) => {
 };
 
 document.querySelectorAll("video[data-src]").forEach((video) => {
-  deferVideoSource(video, video.dataset.src);
+  deferVideoSource(
+    video,
+    video.dataset.src,
+    video === heroRolloutVideo,
+  );
 });
 
 document.querySelectorAll(".table-toggle").forEach((button) => {
