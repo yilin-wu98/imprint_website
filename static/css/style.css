@@ -84,9 +84,45 @@ a:hover {
 }
 
 .hero {
-  background: var(--bg);
-  padding: 5rem 1.5rem 4rem;
+  align-items: flex-end;
+  background: #080c11;
+  color: #fff;
+  display: flex;
+  isolation: isolate;
+  min-height: 100svh;
+  overflow: hidden;
+  padding: clamp(4rem, 9vh, 7rem) 1.5rem clamp(3.5rem, 7vh, 5.5rem);
+  position: relative;
   text-align: center;
+}
+
+.hero-rollout-grid {
+  filter: saturate(0.86) contrast(1.06) brightness(0.8);
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  pointer-events: none;
+  position: absolute;
+  transform: scale(1.01);
+  width: 100%;
+  z-index: 0;
+}
+
+.hero-shade {
+  background:
+    linear-gradient(180deg, rgba(3, 8, 14, 0.18) 0%, rgba(3, 8, 14, 0.34) 43%, rgba(3, 8, 14, 0.94) 100%),
+    linear-gradient(90deg, rgba(3, 8, 14, 0.32), transparent 24%, transparent 76%, rgba(3, 8, 14, 0.32));
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+}
+
+.hero-foreground {
+  position: relative;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.72);
+  width: 100%;
+  z-index: 2;
 }
 
 .paper-title {
@@ -99,6 +135,15 @@ a:hover {
 
 .paper-title .accent {
   color: var(--accent);
+}
+
+.hero .paper-title {
+  color: #fff;
+  font-size: clamp(2.5rem, 4.8vw, 4rem);
+}
+
+.hero .paper-title .accent {
+  color: #fb923c;
 }
 
 .authors {
@@ -120,6 +165,10 @@ a:hover {
   color: var(--text-body);
   font-weight: 500;
   white-space: nowrap;
+}
+
+.hero .authors-public .author {
+  color: #f8fafc;
 }
 
 .authors-public sup,
@@ -156,6 +205,16 @@ a:hover {
   flex-basis: 100%;
   font-size: 0.86rem;
   margin-top: 0.2rem;
+}
+
+.hero .affiliations-public {
+  color: #dce3eb;
+  margin-bottom: 0;
+}
+
+.hero .authors-public sup,
+.hero .affiliations-public sup {
+  color: #fdba74;
 }
 
 .links {
@@ -2056,6 +2115,18 @@ h3 {
   text-align: center;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .hero {
+    background-image: url("../images/hero-realworld-success-grid.jpg");
+    background-position: center;
+    background-size: cover;
+  }
+
+  .hero-rollout-grid {
+    display: none;
+  }
+}
+
 @media (max-width: 900px) {
   .result-highlight-grid {
     gap: 0.8rem;
@@ -2188,7 +2259,18 @@ h3 {
 
 @media (max-width: 640px) {
   .hero {
-    padding: 3rem 1.25rem 2.5rem;
+    min-height: 100svh;
+    padding: 3rem 1.25rem 2.75rem;
+  }
+
+  .hero-shade {
+    background:
+      linear-gradient(180deg, rgba(3, 8, 14, 0.3) 0%, rgba(3, 8, 14, 0.52) 34%, rgba(3, 8, 14, 0.97) 100%),
+      linear-gradient(90deg, rgba(3, 8, 14, 0.28), transparent 50%, rgba(3, 8, 14, 0.28));
+  }
+
+  .hero .paper-title {
+    font-size: clamp(2rem, 8vw, 2.55rem);
   }
 
   .section,

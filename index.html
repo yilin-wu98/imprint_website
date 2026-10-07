@@ -10,13 +10,28 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="static/css/style.css?v=20261006-public-authors">
+  <link rel="stylesheet" href="static/css/style.css?v=20261007-hero-grid">
   <script defer src="static/js/main.js?v=20261006-public-site"></script>
 </head>
 <body>
 
 <section class="hero">
-  <div class="container">
+  <video
+    class="hero-rollout-grid"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="metadata"
+    data-preload="auto"
+    poster="static/images/hero-realworld-success-grid.jpg"
+    data-src="static/videos/hero/imprint-realworld-success-grid.mp4"
+    aria-hidden="true"
+    tabindex="-1"
+  ></video>
+  <div class="hero-shade" aria-hidden="true"></div>
+
+  <div class="container hero-foreground">
     <h1 class="paper-title">
       Memory Without Curation:<br>
       <span class="accent">Learning Multi-Stream Latent Memory for Robot Policies</span>
