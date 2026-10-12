@@ -246,6 +246,1883 @@ document.querySelectorAll(".table-toggle").forEach((button) => {
   });
 });
 
+const methodExplorer = document.getElementById("method-explorer");
+const methodDemoVideo = document.getElementById("method-demo-video");
+const methodDemoSlider = null;
+const methodDemoTime = null;
+const methodDemoToggle = document.getElementById("method-demo-toggle");
+const methodDemoToggleIcon = document.getElementById("method-demo-toggle-icon");
+const methodDemoToggleLabel = document.getElementById("method-demo-toggle-label");
+const methodProgressValue = document.getElementById("method-progress-value");
+const methodProgressBar = document.getElementById("method-progress-bar");
+const methodCurrentObservation = null;
+const methodPolicyMemoryLabel = document.getElementById(
+  "method-policy-memory-label",
+);
+const methodExplorerStatus = document.getElementById("method-explorer-status");
+
+if (
+  methodExplorer &&
+  methodDemoVideo &&
+  methodDemoSlider &&
+  methodDemoTime &&
+  methodDemoToggle &&
+  methodDemoToggleIcon &&
+  methodDemoToggleLabel &&
+  methodProgressValue &&
+  methodProgressBar &&
+  methodCurrentObservation &&
+  methodPolicyMemoryLabel &&
+  methodExplorerStatus
+) {
+  const methodStageTabs = [
+    ...methodExplorer.querySelectorAll("[data-method-stage]"),
+  ];
+  const methodStageContents = [
+    ...methodExplorer.querySelectorAll("[data-method-content]"),
+  ];
+  const methodStreamButtons = [
+    ...methodExplorer.querySelectorAll("[data-method-stream]"),
+  ];
+  const methodHistoryButtons = [
+    ...methodExplorer.querySelectorAll("[data-method-progress]"),
+  ];
+  const methodMemoryTokens = [
+    ...methodExplorer.querySelectorAll("[data-memory-stream]"),
+  ];
+  const methodOutputTrack = methodExplorer.querySelector(
+    ".method-output-track",
+  );
+  const methodMemoryNode = methodExplorer.querySelector(".method-memory-node");
+  const methodProgressObjective = methodExplorer.querySelector(
+    ".method-progress-objective",
+  );
+  const methodCanvasContext = methodCurrentObservation.getContext("2d");
+  const methodStreamNames = {
+    visual: "visual",
+    action: "action",
+    state: "state",
+  };
+  const activeMethodStreams = new Set(
+    methodStreamButtons
+      .filter((button) => button.getAttribute("aria-pressed") === "true")
+      .map((button) => button.dataset.methodStream),
+  );
+  let selectedMethodStage = methodExplorer.dataset.stage || "memory";
+  let methodDemoIsVisible = false;
+  let methodDemoPausedByUser = false;
+
+  const formatMethodTime = (seconds) => {
+    const safeSeconds = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
+    const minutes = Math.floor(safeSeconds / 60);
+    const remainder = Math.floor(safeSeconds % 60);
+    return `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+  };
+
+  const drawMethodCurrentObservation = () => {
+    if (!methodCanvasContext || methodDemoVideo.readyState < 2) {
+      return;
+    }
+
+    try {
+      methodCanvasContext.drawImage(
+        methodDemoVideo,
+        0,
+        0,
+        methodCurrentObservation.width,
+        methodCurrentObservation.height,
+      );
+    } catch {
+      // The video frame will be drawn on the next media event.
+    }
+  };
+
+  const renderMethodTimeline = () => {
+    const duration = Number.isFinite(methodDemoVideo.duration)
+      ? methodDemoVideo.duration
+      : 0;
+    const currentTime = Number.isFinite(methodDemoVideo.currentTime)
+      ? methodDemoVideo.currentTime
+      : 0;
+    const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+    const boundedProgress = Math.min(100, Math.max(0, progress));
+
+    methodDemoSlider.value = String(boundedProgress);
+    methodDemoTime.textContent =
+      `${formatMethodTime(currentTime)} / ${formatMethodTime(duration || 27)}`;
+    methodProgressValue.textContent = `${Math.round(boundedProgress)}%`;
+    methodProgressBar.style.width = `${boundedProgress}%`;
+
+    let nearestHistoryButton = null;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+    methodHistoryButtons.forEach((button) => {
+      const distance = Math.abs(
+        Number(button.dataset.methodProgress) - boundedProgress,
+      );
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestHistoryButton = button;
+      }
+    });
+    methodHistoryButtons.forEach((button) => {
+      button.classList.toggle("is-active", button === nearestHistoryButton);
+    });
+
+    drawMethodCurrentObservation();
+  };
+
+  const updateMethodPlaybackControl = () => {
+    const isPaused = methodDemoVideo.paused;
+    methodDemoToggleIcon.textContent = isPaused ? "▶" : "Ⅱ";
+    methodDemoToggleLabel.textContent = isPaused ? "Play" : "Pause";
+    methodDemoToggle.setAttribute(
+      "aria-label",
+      `${isPaused ? "Play" : "Pause"} the folding demonstration`,
+    );
+  };
+
+  const playMethodDemo = () => {
+    if (!methodDemoIsVisible || methodDemoPausedByUser) {
+      return;
+    }
+
+    const playRequest = methodDemoVideo.play();
+    if (playRequest && typeof playRequest.catch === "function") {
+      playRequest.catch(() => {
+        updateMethodPlaybackControl();
+      });
+    }
+  };
+
+  const renderMethodStatus = () => {
+    const activeNames = Object.keys(methodStreamNames)
+      .filter((stream) => activeMethodStreams.has(stream))
+      .map((stream) => methodStreamNames[stream]);
+
+    if (!activeNames.length) {
+      methodExplorerStatus.textContent =
+        "Select at least one history stream to populate the latent memory.";
+      return;
+    }
+
+    if (activeNames.length < 3) {
+      methodExplorerStatus.textContent =
+        `Tracing ${activeNames.join(" + ")} history through the memory encoder.`;
+      return;
+    }
+
+    methodExplorerStatus.textContent =
+      selectedMethodStage === "memory"
+        ? "All three histories shape the latent memory before policy adaptation."
+        : "Memory, language, and the current observation jointly condition the VLA.";
+  };
+
+  const renderMethodStreams = () => {
+    methodStreamButtons.forEach((button) => {
+      const stream = button.dataset.methodStream;
+      const isActive = activeMethodStreams.has(stream);
+      const state = button.querySelector(".method-stream-state");
+      const flow = methodExplorer.querySelector(
+        `[data-method-flow="${stream}"]`,
+      );
+      const output = methodExplorer.querySelector(
+        `[data-method-output="${stream}"]`,
+      );
+
+      button.classList.toggle("is-disabled", !isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+      if (state) {
+        state.textContent = isActive ? "On" : "Off";
+      }
+      flow?.classList.toggle("is-disabled", !isActive);
+      output?.classList.toggle("is-disabled", !isActive);
+    });
+
+    methodMemoryTokens.forEach((token) => {
+      const stream = token.dataset.memoryStream;
+      const isActive =
+        stream === "mixed"
+          ? activeMethodStreams.size > 0
+          : activeMethodStreams.has(stream);
+      token.classList.toggle("is-muted", !isActive);
+    });
+
+    const hasActiveStreams = activeMethodStreams.size > 0;
+    methodExplorer.classList.toggle("has-no-streams", !hasActiveStreams);
+    methodMemoryNode?.classList.toggle("is-empty", !hasActiveStreams);
+    methodOutputTrack?.classList.toggle("is-disabled", !hasActiveStreams);
+    methodProgressObjective?.classList.toggle(
+      "is-disabled",
+      !hasActiveStreams,
+    );
+
+    const activeLabels = Object.keys(methodStreamNames)
+      .filter((stream) => activeMethodStreams.has(stream))
+      .map((stream) => methodStreamNames[stream]);
+    methodPolicyMemoryLabel.textContent = activeLabels.length
+      ? `${activeLabels.join(" + ")} memory`
+      : "No history memory selected";
+
+    renderMethodStatus();
+  };
+
+  const selectMethodStage = (stage) => {
+    selectedMethodStage = stage;
+    methodExplorer.dataset.stage = stage;
+
+    methodStageTabs.forEach((tab) => {
+      const isActive = tab.dataset.methodStage === stage;
+      tab.classList.toggle("is-active", isActive);
+      tab.setAttribute("aria-selected", String(isActive));
+    });
+    methodStageContents.forEach((content) => {
+      content.hidden = content.dataset.methodContent !== stage;
+    });
+
+    renderMethodStatus();
+    if (stage === "policy") {
+      drawMethodCurrentObservation();
+    }
+  };
+
+  methodStageTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      selectMethodStage(tab.dataset.methodStage);
+    });
+  });
+
+  methodStreamButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const stream = button.dataset.methodStream;
+      if (activeMethodStreams.has(stream)) {
+        activeMethodStreams.delete(stream);
+      } else {
+        activeMethodStreams.add(stream);
+      }
+      renderMethodStreams();
+    });
+  });
+
+  methodHistoryButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const duration = Number.isFinite(methodDemoVideo.duration)
+        ? methodDemoVideo.duration
+        : 0;
+      const progress = Number(button.dataset.methodProgress);
+      if (duration > 0) {
+        methodDemoVideo.currentTime = Math.min(
+          (progress / 100) * duration,
+          Math.max(0, duration - 0.05),
+        );
+      }
+      renderMethodTimeline();
+    });
+  });
+
+  methodDemoSlider.addEventListener("input", () => {
+    const duration = Number.isFinite(methodDemoVideo.duration)
+      ? methodDemoVideo.duration
+      : 0;
+    if (duration > 0) {
+      methodDemoVideo.currentTime = Math.min(
+        (Number(methodDemoSlider.value) / 100) * duration,
+        Math.max(0, duration - 0.05),
+      );
+    }
+    renderMethodTimeline();
+  });
+
+  methodDemoToggle.addEventListener("click", () => {
+    if (methodDemoVideo.paused) {
+      methodDemoPausedByUser = false;
+      playMethodDemo();
+    } else {
+      methodDemoPausedByUser = true;
+      methodDemoVideo.pause();
+    }
+    updateMethodPlaybackControl();
+  });
+
+  methodDemoVideo.addEventListener("loadedmetadata", renderMethodTimeline);
+  methodDemoVideo.addEventListener("loadeddata", () => {
+    renderMethodTimeline();
+    playMethodDemo();
+  });
+  methodDemoVideo.addEventListener("canplay", playMethodDemo);
+  methodDemoVideo.addEventListener("timeupdate", renderMethodTimeline);
+  methodDemoVideo.addEventListener("seeked", renderMethodTimeline);
+  methodDemoVideo.addEventListener("play", updateMethodPlaybackControl);
+  methodDemoVideo.addEventListener("pause", updateMethodPlaybackControl);
+
+  if ("IntersectionObserver" in window) {
+    const methodExplorerObserver = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        methodDemoIsVisible = Boolean(entry?.isIntersecting);
+        methodExplorer.classList.toggle(
+          "is-animated",
+          methodDemoIsVisible,
+        );
+
+        if (methodDemoIsVisible) {
+          activateDeferredVideo(methodDemoVideo);
+          playMethodDemo();
+        } else {
+          methodDemoVideo.pause();
+        }
+      },
+      { threshold: 0.12, rootMargin: "120px 0px" },
+    );
+    methodExplorerObserver.observe(methodExplorer);
+  } else {
+    methodDemoIsVisible = true;
+    methodExplorer.classList.add("is-animated");
+    activateDeferredVideo(methodDemoVideo);
+    playMethodDemo();
+  }
+
+  selectMethodStage(selectedMethodStage);
+  renderMethodStreams();
+  renderMethodTimeline();
+  updateMethodPlaybackControl();
+}
+
+const methodRolloutVideo = document.getElementById("method-rollout-video");
+const methodExampleShowcase = document.getElementById("method-example");
+const methodRolloutSlider = document.getElementById("method-rollout-slider");
+const methodRolloutTime = document.getElementById("method-rollout-time");
+const methodRolloutClock = document.getElementById("method-rollout-clock");
+const methodRolloutToggle = document.getElementById("method-rollout-toggle");
+const methodRolloutToggleIcon = document.getElementById(
+  "method-rollout-toggle-icon",
+);
+const methodRolloutToggleLabel = document.getElementById(
+  "method-rollout-toggle-label",
+);
+const methodHistoryReadout = document.getElementById("method-history-readout");
+const methodHistoryMeter = document.getElementById("method-history-meter");
+const methodNextPrediction = document.getElementById(
+  "method-next-prediction",
+);
+const methodPolicyActionLabel = document.getElementById(
+  "method-policy-action-label",
+);
+const methodPolicyObservation = document.getElementById(
+  "method-policy-observation",
+);
+const methodEvidenceChip = document.getElementById("method-evidence-chip");
+const methodEvidenceLabel = document.getElementById("method-evidence-label");
+const methodEvidenceScore = document.getElementById("method-evidence-score");
+const methodEvidenceDelta = document.getElementById("method-evidence-delta");
+const methodEvidenceNote = document.getElementById("method-evidence-note");
+const methodTaskChart = document.getElementById("method-task-chart");
+const methodRecipeOptions = document.getElementById("method-recipe-options");
+
+if (
+  methodExplorer &&
+  methodDemoVideo &&
+  methodDemoToggle &&
+  methodDemoToggleIcon &&
+  methodDemoToggleLabel &&
+  methodProgressValue &&
+  methodProgressBar &&
+  methodPolicyMemoryLabel &&
+  methodExplorerStatus &&
+  methodRolloutVideo &&
+  methodExampleShowcase &&
+  methodRolloutSlider &&
+  methodRolloutTime &&
+  methodRolloutClock &&
+  methodRolloutToggle &&
+  methodRolloutToggleIcon &&
+  methodRolloutToggleLabel &&
+  methodHistoryReadout &&
+  methodHistoryMeter &&
+  methodNextPrediction &&
+  methodPolicyActionLabel &&
+  methodEvidenceChip &&
+  methodEvidenceLabel &&
+  methodEvidenceScore &&
+  methodEvidenceDelta &&
+  methodEvidenceNote &&
+  methodTaskChart &&
+  methodRecipeOptions
+) {
+  const methodStageTabsV2 = [
+    ...methodExplorer.querySelectorAll("[data-method-stage]"),
+  ];
+  const methodStageContentsV2 = [
+    ...methodExplorer.querySelectorAll("[data-method-content]"),
+  ];
+  const methodStreamButtonsV2 = [
+    ...methodExplorer.querySelectorAll("[data-method-stream]"),
+  ];
+  const methodObjectiveButtons = [
+    ...methodExplorer.querySelectorAll("[data-method-objective]"),
+  ];
+  const methodEvidenceTabs = [
+    ...methodExplorer.querySelectorAll("[data-method-evidence]"),
+  ];
+  const methodRecipeButtons = [
+    ...methodExplorer.querySelectorAll("[data-method-recipe]"),
+  ];
+  const methodRolloutFrames = [
+    ...methodExampleShowcase.querySelectorAll(
+      "[data-method-rollout-progress]",
+    ),
+  ];
+  const methodMemoryTokensV2 = [
+    ...methodExplorer.querySelectorAll("[data-memory-stream]"),
+  ];
+  const methodPolicyMemoryTokens = [
+    ...methodExplorer.querySelectorAll("[data-policy-memory-stream]"),
+  ];
+  const methodOutputTrackV2 = methodExplorer.querySelector(
+    ".method-output-track",
+  );
+  const methodMemoryNodeV2 = methodExplorer.querySelector(
+    ".method-memory-node",
+  );
+  const activeMethodStreamsV2 = new Set(
+    methodStreamButtonsV2
+      .filter((button) => button.getAttribute("aria-pressed") === "true")
+      .map((button) => button.dataset.methodStream),
+  );
+  const activeMethodObjectives = new Set(
+    methodObjectiveButtons
+      .filter((button) => button.getAttribute("aria-pressed") === "true")
+      .map((button) => button.dataset.methodObjective),
+  );
+  const streamOrder = ["visual", "action", "state"];
+  const objectiveOrder = ["visual", "action", "state", "progress"];
+  const streamLabels = {
+    visual: "Visual",
+    action: "Action",
+    state: "State",
+  };
+  const objectiveLabels = {
+    visual: "Visual",
+    action: "Action",
+    state: "State",
+    progress: "Progress",
+  };
+  const rmbenchTasks = [
+    { short: "Obs. / Pick", full: "Observe / Pick" },
+    { short: "Rearrange", full: "Rearrange" },
+    { short: "Put Back", full: "Put Back" },
+    { short: "Swap Blocks", full: "Swap Blocks" },
+    { short: "Swap T", full: "Swap T" },
+    { short: "Battery", full: "Battery" },
+    { short: "Ranking", full: "Ranking" },
+    { short: "Cover", full: "Cover Blocks" },
+    { short: "Press", full: "Press Button" },
+  ];
+  const inputAblations = {
+    visual: {
+      label: "Vision only",
+      average: 60.6,
+      values: [9, 93, 100, 81, 45, 30, 80, 100, 7],
+    },
+    "visual+action": {
+      label: "Vision + Action",
+      average: 68.4,
+      values: [6, 100, 100, 100, 99, 38, 72, 83, 18],
+    },
+    "visual+state": {
+      label: "Vision + State",
+      average: 60.9,
+      values: [9, 94, 100, 98, 99, 28, 46, 70, 4],
+    },
+    "visual+action+state": {
+      label: "Vision + Action + State (IMPRINT)",
+      average: 72.7,
+      values: [9, 100, 100, 100, 100, 41, 83, 100, 21],
+    },
+  };
+  const objectiveAblations = {
+    visual: {
+      label: "Visual only",
+      average: 66.9,
+      values: [6, 78, 100, 89, 99, 30, 85, 100, 15],
+    },
+    "action+state": {
+      label: "Action + state",
+      average: 62.7,
+      values: [5, 100, 100, 89, 98, 36, 61, 52, 23],
+    },
+    "visual+action+state": {
+      label: "Without progress",
+      average: 68.7,
+      values: [6, 91, 100, 90, 97, 35, 73, 100, 26],
+    },
+    "visual+action+state+progress": {
+      label: "All objectives (IMPRINT)",
+      average: 72.7,
+      values: [9, 100, 100, 100, 100, 41, 83, 100, 21],
+    },
+  };
+  const recipeAblations = {
+    e2e: {
+      label: "End-to-end learning",
+      average: 50.8,
+      values: [12, 90, 100, 90, 45, 27, 73, 15, 5],
+    },
+    frozen: {
+      label: "Memory learned, then frozen",
+      average: 58.8,
+      values: [7, 99, 100, 99, 99, 20, 68, 35, 2],
+    },
+    joint: {
+      label: "Joint memory–policy adaptation",
+      average: 72.7,
+      values: [9, 100, 100, 100, 100, 41, 83, 100, 21],
+    },
+  };
+  const rolloutPredictions = [
+    {
+      start: 0,
+      full: "Move both grippers toward the near towel corners.",
+      short: "Reach toward the towel",
+    },
+    {
+      start: 18,
+      full: "Close both grippers on the near towel corners.",
+      short: "Grasp both near corners",
+    },
+    {
+      start: 36,
+      full: "Lift the near edge and initiate the first fold.",
+      short: "Lift and begin the fold",
+    },
+    {
+      start: 55,
+      full: "Carry the folded edge across the towel.",
+      short: "Move the folded edge across",
+    },
+    {
+      start: 74,
+      full: "Align the folded layers and refine the final shape.",
+      short: "Align the folded layers",
+    },
+    {
+      start: 90,
+      full: "Release the towel and withdraw both grippers.",
+      short: "Release and withdraw",
+    },
+  ];
+  let selectedMethodStageV2 = methodExplorer.dataset.stage || "memory";
+  let selectedEvidenceMode = "objectives";
+  let selectedRecipe = "joint";
+  let methodExampleIsVisible = false;
+  let demoPausedByUser = false;
+  let rolloutPausedByUser = true;
+
+  const formatMethodTimeV2 = (seconds) => {
+    const safeSeconds = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
+    const minutes = Math.floor(safeSeconds / 60);
+    const remainder = Math.floor(safeSeconds % 60);
+    return `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+  };
+
+  const canonicalSelection = (activeValues, order) =>
+    order.filter((value) => activeValues.has(value)).join("+");
+
+  const describeSelection = (activeValues, order, labels) => {
+    const names = order
+      .filter((value) => activeValues.has(value))
+      .map((value) => labels[value]);
+    return names.length ? names.join(" + ") : "No components selected";
+  };
+
+  const currentRolloutPrediction = (progress) => {
+    let prediction = rolloutPredictions[0];
+    rolloutPredictions.forEach((candidate) => {
+      if (progress >= candidate.start) {
+        prediction = candidate;
+      }
+    });
+    return prediction;
+  };
+
+  const updateDemoPlaybackControlV2 = () => {
+    const isPaused = methodDemoVideo.paused;
+    methodDemoToggleIcon.textContent = isPaused ? "▶" : "Ⅱ";
+    methodDemoToggleLabel.textContent = isPaused ? "Play" : "Pause";
+    methodDemoToggle.setAttribute(
+      "aria-label",
+      `${isPaused ? "Play" : "Pause"} the folding demonstration`,
+    );
+  };
+
+  const playMethodDemoV2 = () => {
+    if (!methodExampleIsVisible || demoPausedByUser) {
+      return;
+    }
+
+    const request = methodDemoVideo.play();
+    request?.catch?.(updateDemoPlaybackControlV2);
+  };
+
+  const updateRolloutPlaybackControl = () => {
+    const isPaused = methodRolloutVideo.paused;
+    methodRolloutToggleIcon.textContent = isPaused ? "▶" : "Ⅱ";
+    methodRolloutToggleLabel.textContent = isPaused ? "Play" : "Pause";
+    methodRolloutToggle.setAttribute(
+      "aria-label",
+      `${isPaused ? "Play" : "Pause"} the real-world rollout`,
+    );
+  };
+
+  const renderRolloutTimeline = () => {
+    const duration = Number.isFinite(methodRolloutVideo.duration)
+      ? methodRolloutVideo.duration
+      : 29.87;
+    const currentTime = Number.isFinite(methodRolloutVideo.currentTime)
+      ? methodRolloutVideo.currentTime
+      : 0;
+    const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+    const boundedProgress = Math.min(100, Math.max(0, progress));
+    const prediction = currentRolloutPrediction(boundedProgress);
+
+    methodRolloutSlider.value = String(boundedProgress);
+    methodRolloutSlider.style.setProperty(
+      "--progress",
+      `${boundedProgress}%`,
+    );
+    methodRolloutTime.textContent =
+      `${formatMethodTimeV2(currentTime)} / ${formatMethodTimeV2(duration)}`;
+    methodRolloutClock.textContent = `t = ${formatMethodTimeV2(currentTime)}`;
+    methodHistoryReadout.textContent =
+      `${Math.round(boundedProgress)}% · ${currentTime.toFixed(1)} s`;
+    methodHistoryMeter.style.width = `${boundedProgress}%`;
+    methodProgressValue.textContent = `${Math.round(boundedProgress)}%`;
+    methodProgressBar.style.width = `${boundedProgress}%`;
+    methodNextPrediction.textContent = prediction.full;
+
+    let nearestFrame = null;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+    methodRolloutFrames.forEach((button) => {
+      const frameProgress = Number(button.dataset.methodRolloutProgress);
+      const distance = Math.abs(frameProgress - boundedProgress);
+      button.classList.toggle(
+        "is-complete",
+        frameProgress <= boundedProgress,
+      );
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestFrame = button;
+      }
+    });
+    methodRolloutFrames.forEach((button) => {
+      button.classList.toggle("is-active", button === nearestFrame);
+    });
+
+    const nearestFrameImage = nearestFrame?.querySelector("img");
+    const nearestFrameSource = nearestFrameImage?.getAttribute("src");
+    if (
+      methodPolicyObservation &&
+      nearestFrameSource &&
+      methodPolicyObservation.getAttribute("src") !== nearestFrameSource
+    ) {
+      methodPolicyObservation.src = nearestFrameSource;
+    }
+  };
+
+  const playMethodRollout = () => {
+    if (!methodExampleIsVisible || rolloutPausedByUser) {
+      return;
+    }
+
+    if (
+      Number.isFinite(methodRolloutVideo.duration) &&
+      methodRolloutVideo.currentTime >= methodRolloutVideo.duration - 0.08
+    ) {
+      methodRolloutVideo.currentTime = 0;
+    }
+
+    const request = methodRolloutVideo.play();
+    request?.catch?.(updateRolloutPlaybackControl);
+  };
+
+  const renderMethodStatusV2 = () => {
+    const streamDescription = describeSelection(
+      activeMethodStreamsV2,
+      streamOrder,
+      streamLabels,
+    ).toLowerCase();
+
+    if (!activeMethodStreamsV2.size) {
+      methodExplorerStatus.textContent =
+        "Select at least one history stream to populate latent memory.";
+      return;
+    }
+
+    methodExplorerStatus.textContent =
+      selectedMethodStageV2 === "memory"
+        ? `${streamDescription} history is compressed before policy adaptation.`
+        : "The selected memory, task instruction, and current observation condition the VLA.";
+  };
+
+  const selectEvidenceMode = (mode) => {
+    selectedEvidenceMode = mode;
+    methodEvidenceTabs.forEach((tab) => {
+      const isActive = tab.dataset.methodEvidence === mode;
+      tab.classList.toggle("is-active", isActive);
+      tab.setAttribute("aria-selected", String(isActive));
+    });
+    renderMethodEvidence();
+  };
+
+  const renderMethodStreamsV2 = (showEvidence = false) => {
+    methodStreamButtonsV2.forEach((button) => {
+      const stream = button.dataset.methodStream;
+      const isActive = activeMethodStreamsV2.has(stream);
+      const state = button.querySelector(".method-stream-state");
+      const flow = methodExplorer.querySelector(
+        `[data-method-flow="${stream}"]`,
+      );
+
+      button.classList.toggle("is-disabled", !isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+      if (state) {
+        state.textContent = isActive ? "On" : "Off";
+      }
+      flow?.classList.toggle("is-disabled", !isActive);
+    });
+
+    methodMemoryTokensV2.forEach((token) => {
+      const stream = token.dataset.memoryStream;
+      const isActive =
+        stream === "mixed"
+          ? activeMethodStreamsV2.size > 0
+          : activeMethodStreamsV2.has(stream);
+      token.classList.toggle("is-muted", !isActive);
+    });
+    methodPolicyMemoryTokens.forEach((token) => {
+      token.classList.toggle(
+        "is-muted",
+        !activeMethodStreamsV2.has(token.dataset.policyMemoryStream),
+      );
+    });
+
+    const hasStreams = activeMethodStreamsV2.size > 0;
+    methodExplorer.classList.toggle("has-no-streams", !hasStreams);
+    methodMemoryNodeV2?.classList.toggle("is-empty", !hasStreams);
+    methodOutputTrackV2?.classList.toggle("is-disabled", !hasStreams);
+    methodPolicyMemoryLabel.textContent = activeMethodStreamsV2.size
+      ? streamOrder
+          .filter((stream) => activeMethodStreamsV2.has(stream))
+          .map((stream) => streamLabels[stream])
+          .join(" · ")
+      : "No history selected";
+    renderMethodStatusV2();
+
+    if (showEvidence) {
+      selectEvidenceMode("inputs");
+    }
+  };
+
+  const renderMethodObjectives = (showEvidence = false) => {
+    methodObjectiveButtons.forEach((button) => {
+      const objective = button.dataset.methodObjective;
+      const isActive = activeMethodObjectives.has(objective);
+      const state = button.querySelector(".method-objective-state");
+      button.classList.toggle("is-disabled", !isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+      if (state) {
+        state.textContent = isActive ? "On" : "Off";
+      }
+    });
+
+    if (showEvidence) {
+      selectEvidenceMode("objectives");
+    }
+  };
+
+  const renderTaskChart = (row) => {
+    methodTaskChart.replaceChildren();
+
+    if (!row) {
+      const empty = document.createElement("div");
+      empty.className = "method-task-chart-empty";
+      empty.innerHTML =
+        "<strong>This combination was not reported.</strong>" +
+        "<span>Select a configuration represented by an exact appendix row.</span>";
+      methodTaskChart.append(empty);
+      return;
+    }
+
+    rmbenchTasks.forEach((task, index) => {
+      const value = row.values[index];
+      const item = document.createElement("div");
+      const heading = document.createElement("div");
+      const label = document.createElement("span");
+      const score = document.createElement("strong");
+      const track = document.createElement("span");
+      const fill = document.createElement("span");
+
+      item.className = "method-task-result";
+      heading.className = "method-task-result-heading";
+      label.textContent = task.short;
+      label.title = task.full;
+      score.textContent = `${value}%`;
+      track.className = "method-task-result-track";
+      fill.style.width = `${value}%`;
+      track.append(fill);
+      heading.append(label, score);
+      item.append(heading, track);
+      methodTaskChart.append(item);
+    });
+  };
+
+  function renderMethodEvidence() {
+    let row = null;
+    let requestedLabel = "";
+
+    if (selectedEvidenceMode === "inputs") {
+      const key = canonicalSelection(activeMethodStreamsV2, streamOrder);
+      row = inputAblations[key] || null;
+      requestedLabel = describeSelection(
+        activeMethodStreamsV2,
+        streamOrder,
+        streamLabels,
+      );
+    } else if (selectedEvidenceMode === "objectives") {
+      const key = canonicalSelection(activeMethodObjectives, objectiveOrder);
+      row = objectiveAblations[key] || null;
+      requestedLabel = describeSelection(
+        activeMethodObjectives,
+        objectiveOrder,
+        objectiveLabels,
+      );
+    } else {
+      row = recipeAblations[selectedRecipe];
+      requestedLabel = row.label;
+    }
+
+    methodRecipeOptions.hidden = selectedEvidenceMode !== "recipe";
+    methodRecipeButtons.forEach((button) => {
+      const isActive = button.dataset.methodRecipe === selectedRecipe;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+
+    if (!row) {
+      methodEvidenceChip.textContent = "No matching appendix row";
+      methodEvidenceLabel.textContent = requestedLabel;
+      methodEvidenceScore.textContent = "—";
+      methodEvidenceDelta.textContent = "Not reported";
+      methodEvidenceNote.textContent =
+        "The paper does not report this exact combination, so no value is inferred or interpolated.";
+      renderTaskChart(null);
+      return;
+    }
+
+    const difference = 72.7 - row.average;
+    methodEvidenceChip.textContent = "Exact appendix row";
+    methodEvidenceLabel.textContent = row.label;
+    methodEvidenceScore.textContent = `${row.average.toFixed(1)}%`;
+    methodEvidenceDelta.textContent =
+      Math.abs(difference) < 0.05
+        ? "Best reported configuration"
+        : `${difference.toFixed(1)} points below full IMPRINT`;
+    methodEvidenceNote.textContent =
+      "Per-task RMBench success (%). Every value below is copied from the corresponding appendix row.";
+    renderTaskChart(row);
+  }
+
+  const selectMethodStageV2 = (stage) => {
+    selectedMethodStageV2 = stage;
+    methodExplorer.dataset.stage = stage;
+    methodStageTabsV2.forEach((tab) => {
+      const isActive = tab.dataset.methodStage === stage;
+      tab.classList.toggle("is-active", isActive);
+      tab.setAttribute("aria-selected", String(isActive));
+    });
+    methodStageContentsV2.forEach((content) => {
+      content.hidden = content.dataset.methodContent !== stage;
+    });
+    renderMethodStatusV2();
+
+    if (stage === "memory") {
+      selectEvidenceMode("objectives");
+    } else {
+      selectedRecipe = "joint";
+      selectEvidenceMode("recipe");
+    }
+  };
+
+  methodStageTabsV2.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      selectMethodStageV2(tab.dataset.methodStage);
+    });
+  });
+
+  methodStreamButtonsV2.forEach((button) => {
+    button.addEventListener("click", () => {
+      const stream = button.dataset.methodStream;
+      if (activeMethodStreamsV2.has(stream)) {
+        activeMethodStreamsV2.delete(stream);
+      } else {
+        activeMethodStreamsV2.add(stream);
+      }
+      renderMethodStreamsV2(true);
+    });
+  });
+
+  methodObjectiveButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const objective = button.dataset.methodObjective;
+      if (activeMethodObjectives.has(objective)) {
+        activeMethodObjectives.delete(objective);
+      } else {
+        activeMethodObjectives.add(objective);
+      }
+      renderMethodObjectives(true);
+    });
+  });
+
+  methodEvidenceTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      selectEvidenceMode(tab.dataset.methodEvidence);
+    });
+  });
+
+  methodRecipeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedRecipe = button.dataset.methodRecipe;
+      renderMethodEvidence();
+    });
+  });
+
+  methodRolloutFrames.forEach((button) => {
+    button.addEventListener("click", () => {
+      const duration = Number.isFinite(methodRolloutVideo.duration)
+        ? methodRolloutVideo.duration
+        : 0;
+      const progress = Number(button.dataset.methodRolloutProgress);
+      rolloutPausedByUser = true;
+      methodRolloutVideo.pause();
+      if (duration > 0) {
+        methodRolloutVideo.currentTime = Math.min(
+          (progress / 100) * duration,
+          Math.max(0, duration - 0.05),
+        );
+      }
+      renderRolloutTimeline();
+      updateRolloutPlaybackControl();
+    });
+  });
+
+  methodRolloutSlider.addEventListener("input", () => {
+    const duration = Number.isFinite(methodRolloutVideo.duration)
+      ? methodRolloutVideo.duration
+      : 0;
+    rolloutPausedByUser = true;
+    methodRolloutVideo.pause();
+    if (duration > 0) {
+      methodRolloutVideo.currentTime = Math.min(
+        (Number(methodRolloutSlider.value) / 100) * duration,
+        Math.max(0, duration - 0.05),
+      );
+    }
+    renderRolloutTimeline();
+    updateRolloutPlaybackControl();
+  });
+
+  methodDemoToggle.addEventListener("click", () => {
+    if (methodDemoVideo.paused) {
+      demoPausedByUser = false;
+      playMethodDemoV2();
+    } else {
+      demoPausedByUser = true;
+      methodDemoVideo.pause();
+    }
+    updateDemoPlaybackControlV2();
+  });
+
+  methodRolloutToggle.addEventListener("click", () => {
+    if (methodRolloutVideo.paused) {
+      rolloutPausedByUser = false;
+      playMethodRollout();
+    } else {
+      rolloutPausedByUser = true;
+      methodRolloutVideo.pause();
+    }
+    updateRolloutPlaybackControl();
+  });
+
+  methodDemoVideo.addEventListener("loadeddata", playMethodDemoV2);
+  methodDemoVideo.addEventListener("canplay", playMethodDemoV2);
+  methodDemoVideo.addEventListener("play", updateDemoPlaybackControlV2);
+  methodDemoVideo.addEventListener("pause", updateDemoPlaybackControlV2);
+  methodRolloutVideo.addEventListener("loadedmetadata", renderRolloutTimeline);
+  methodRolloutVideo.addEventListener("loadeddata", renderRolloutTimeline);
+  methodRolloutVideo.addEventListener("timeupdate", renderRolloutTimeline);
+  methodRolloutVideo.addEventListener("seeked", renderRolloutTimeline);
+  methodRolloutVideo.addEventListener("play", updateRolloutPlaybackControl);
+  methodRolloutVideo.addEventListener("pause", updateRolloutPlaybackControl);
+  methodRolloutVideo.addEventListener("ended", () => {
+    rolloutPausedByUser = true;
+    updateRolloutPlaybackControl();
+  });
+
+  if ("IntersectionObserver" in window) {
+    const methodPipelineObserver = new IntersectionObserver(
+      (entries) => {
+        methodExplorer.classList.toggle(
+          "is-animated",
+          Boolean(entries[0]?.isIntersecting),
+        );
+      },
+      { threshold: 0.08, rootMargin: "160px 0px" },
+    );
+    methodPipelineObserver.observe(methodExplorer);
+
+    const methodExampleObserver = new IntersectionObserver(
+      (entries) => {
+        methodExampleIsVisible = Boolean(entries[0]?.isIntersecting);
+
+        if (methodExampleIsVisible) {
+          activateDeferredVideo(methodDemoVideo);
+          activateDeferredVideo(methodRolloutVideo);
+          playMethodDemoV2();
+          playMethodRollout();
+        } else {
+          methodDemoVideo.pause();
+          methodRolloutVideo.pause();
+        }
+      },
+      { threshold: 0.08, rootMargin: "160px 0px" },
+    );
+    methodExampleObserver.observe(methodExampleShowcase);
+  } else {
+    methodExampleIsVisible = true;
+    methodExplorer.classList.add("is-animated");
+    activateDeferredVideo(methodDemoVideo);
+    activateDeferredVideo(methodRolloutVideo);
+    playMethodDemoV2();
+  }
+
+  selectMethodStageV2(selectedMethodStageV2);
+  renderMethodStreamsV2();
+  renderMethodObjectives();
+  renderRolloutTimeline();
+  updateDemoPlaybackControlV2();
+  updateRolloutPlaybackControl();
+}
+
+const methodHistorySliderV13 = document.getElementById("method-history-slider");
+const methodHistoryTimeV13 = document.getElementById("method-history-time");
+
+if (
+  methodExplorer &&
+  methodHistorySliderV13 &&
+  methodHistoryTimeV13 &&
+  methodProgressValue &&
+  methodProgressBar &&
+  methodPolicyMemoryLabel &&
+  methodPolicyObservation &&
+  methodExplorerStatus &&
+  methodEvidenceChip &&
+  methodEvidenceLabel &&
+  methodEvidenceScore &&
+  methodEvidenceDelta &&
+  methodEvidenceNote &&
+  methodTaskChart &&
+  methodRecipeOptions
+) {
+  const methodStageTabsV13 = [
+    ...methodExplorer.querySelectorAll("[data-method-stage]"),
+  ];
+  const methodStageContentsV13 = [
+    ...methodExplorer.querySelectorAll("[data-method-content]"),
+  ];
+  const methodStreamButtonsV13 = [
+    ...methodExplorer.querySelectorAll("[data-method-stream]"),
+  ];
+  const methodObjectiveButtonsV13 = [
+    ...methodExplorer.querySelectorAll("[data-method-objective]"),
+  ];
+  const methodEvidenceTabsV13 = [
+    ...methodExplorer.querySelectorAll("[data-method-evidence]"),
+  ];
+  const methodRecipeButtonsV13 = [
+    ...methodExplorer.querySelectorAll("[data-method-recipe]"),
+  ];
+  const methodHistorySamplesV13 = [
+    ...methodExplorer.querySelectorAll("[data-method-history-point]"),
+  ];
+  const methodVisualHistorySlotsV17 = [
+    ...methodExplorer.querySelectorAll("[data-method-visual-slot]"),
+  ];
+  const methodMemoryTokensV13 = [
+    ...methodExplorer.querySelectorAll("[data-memory-stream]"),
+  ];
+  const methodPolicyMemoryTokensV13 = [
+    ...methodExplorer.querySelectorAll("[data-policy-memory-stream]"),
+  ];
+  const methodOutputTrackV13 = methodExplorer.querySelector(
+    ".method-output-track",
+  );
+  const methodMemoryNodeV13 = methodExplorer.querySelector(
+    ".method-memory-node",
+  );
+  const methodMemoryCaptionV13 = methodExplorer.querySelector(
+    ".method-memory-caption",
+  );
+  const activeMethodStreamsV13 = new Set(
+    methodStreamButtonsV13
+      .filter((button) => button.getAttribute("aria-pressed") === "true")
+      .map((button) => button.dataset.methodStream),
+  );
+  const activeMethodObjectivesV13 = new Set(
+    methodObjectiveButtonsV13
+      .filter((button) => button.getAttribute("aria-pressed") === "true")
+      .map((button) => button.dataset.methodObjective),
+  );
+  const streamOrderV13 = ["visual", "action", "state"];
+  const objectiveOrderV13 = ["visual", "action", "state", "progress"];
+  const streamLabelsV13 = {
+    visual: "Visual",
+    action: "Action",
+    state: "State",
+  };
+  const objectiveLabelsV13 = {
+    visual: "Visual",
+    action: "Action",
+    state: "State",
+    progress: "Progress",
+  };
+  const rmbenchTasksV13 = [
+    { short: "Obs. / Pick", full: "Observe / Pick" },
+    { short: "Rearrange", full: "Rearrange" },
+    { short: "Put Back", full: "Put Back" },
+    { short: "Swap Blocks", full: "Swap Blocks" },
+    { short: "Swap T", full: "Swap T" },
+    { short: "Battery", full: "Battery" },
+    { short: "Ranking", full: "Ranking" },
+    { short: "Cover", full: "Cover Blocks" },
+    { short: "Press", full: "Press Button" },
+  ];
+  const inputAblationsV13 = {
+    visual: {
+      label: "Vision only",
+      average: 60.6,
+      values: [9, 93, 100, 81, 45, 30, 80, 100, 7],
+    },
+    "visual+action": {
+      label: "Vision + Action",
+      average: 68.4,
+      values: [6, 100, 100, 100, 99, 38, 72, 83, 18],
+    },
+    "visual+state": {
+      label: "Vision + State",
+      average: 60.9,
+      values: [9, 94, 100, 98, 99, 28, 46, 70, 4],
+    },
+    "visual+action+state": {
+      label: "Vision + Action + State (IMPRINT)",
+      average: 72.7,
+      values: [9, 100, 100, 100, 100, 41, 83, 100, 21],
+    },
+  };
+  const objectiveAblationsV13 = {
+    visual: {
+      label: "Visual only",
+      average: 66.9,
+      values: [6, 78, 100, 89, 99, 30, 85, 100, 15],
+    },
+    "action+state": {
+      label: "Action + state",
+      average: 62.7,
+      values: [5, 100, 100, 89, 98, 36, 61, 52, 23],
+    },
+    "visual+action+state": {
+      label: "Without progress",
+      average: 68.7,
+      values: [6, 91, 100, 90, 97, 35, 73, 100, 26],
+    },
+    "visual+action+state+progress": {
+      label: "All objectives (IMPRINT)",
+      average: 72.7,
+      values: [9, 100, 100, 100, 100, 41, 83, 100, 21],
+    },
+  };
+  const recipeAblationsV13 = {
+    e2e: {
+      label: "End-to-end learning",
+      average: 50.8,
+      values: [12, 90, 100, 90, 45, 27, 73, 15, 5],
+    },
+    frozen: {
+      label: "Memory learned, then frozen",
+      average: 58.8,
+      values: [7, 99, 100, 99, 99, 20, 68, 35, 2],
+    },
+    joint: {
+      label: "Joint memory–policy adaptation",
+      average: 72.7,
+      values: [9, 100, 100, 100, 100, 41, 83, 100, 21],
+    },
+  };
+  const methodDustDurationV13 = 68.8;
+  const methodDustFrameCountV17 = 69;
+  const methodVisualHistoryOffsetsV23 = [
+    { seconds: 0, label: "initial observation" },
+    { secondsBeforeT: 2, label: "observation two steps before t" },
+    { secondsBeforeT: 1, label: "observation one step before t" },
+  ];
+  let selectedMethodStageV13 = methodExplorer.dataset.stage || "memory";
+  let selectedEvidenceModeV13 = "objectives";
+  let selectedRecipeV13 = "joint";
+  let selectedCapacityEvidenceV13 = null;
+
+  const canonicalSelectionV13 = (activeValues, order) =>
+    order.filter((value) => activeValues.has(value)).join("+");
+
+  const describeSelectionV13 = (activeValues, order, labels) => {
+    const names = order
+      .filter((value) => activeValues.has(value))
+      .map((value) => labels[value]);
+    return names.length ? names.join(" + ") : "No components selected";
+  };
+
+  const formatMethodTimeV13 = (seconds) => {
+    const safeSeconds = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
+    const minutes = Math.floor(safeSeconds / 60);
+    const remainder = Math.floor(safeSeconds % 60);
+    return `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+  };
+
+  const methodDustFrameSourceV17 = (seconds) => {
+    const frameNumber = Math.min(
+      methodDustFrameCountV17,
+      Math.max(1, Math.round(seconds) + 1),
+    );
+    return `static/images/method-dust/history-sequence/frame-${String(frameNumber).padStart(3, "0")}.jpg`;
+  };
+
+  const renderMethodTimelineV13 = () => {
+    const progress = Math.min(
+      100,
+      Math.max(0, Number(methodHistorySliderV13.value)),
+    );
+    const currentSeconds = (progress / 100) * methodDustDurationV13;
+    let nearestPoint = 0;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    methodHistorySliderV13.style.setProperty("--progress", `${progress}%`);
+    methodHistoryTimeV13.textContent =
+      `t = ${formatMethodTimeV13(currentSeconds)} / ${formatMethodTimeV13(methodDustDurationV13)}`;
+    methodExplorer.style.setProperty("--history-progress", `${progress}%`);
+    methodProgressValue.textContent = `${Math.round(progress)}%`;
+    methodProgressBar.style.width = `${progress}%`;
+
+    methodHistorySamplesV13.forEach((sample) => {
+      const sampleProgress = Number(sample.dataset.methodHistoryPoint);
+      const distance = Math.abs(sampleProgress - progress);
+      sample.classList.toggle("is-encoded", sampleProgress <= progress);
+      sample.classList.toggle("is-future", sampleProgress > progress);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestPoint = sampleProgress;
+      }
+    });
+    methodHistorySamplesV13.forEach((sample) => {
+      sample.classList.toggle(
+        "is-current",
+        Number(sample.dataset.methodHistoryPoint) === nearestPoint,
+      );
+    });
+
+    methodVisualHistorySlotsV17.forEach((slot, index) => {
+      const slotDefinition = methodVisualHistoryOffsetsV23[index];
+      const sampleSeconds =
+        "seconds" in slotDefinition
+          ? slotDefinition.seconds
+          : Math.max(0, currentSeconds - slotDefinition.secondsBeforeT);
+      const frameSource = methodDustFrameSourceV17(sampleSeconds);
+      const image = slot.querySelector("img");
+
+      if (image && image.getAttribute("src") !== frameSource) {
+        image.src = frameSource;
+      }
+      if (image) {
+        image.alt =
+          `Dust Table head-camera ${slotDefinition.label}, sampled at ${formatMethodTimeV13(sampleSeconds)}`;
+      }
+    });
+
+    const frameSource = methodDustFrameSourceV17(currentSeconds);
+    if (methodPolicyObservation.getAttribute("src") !== frameSource) {
+      methodPolicyObservation.src = frameSource;
+    }
+    methodPolicyObservation.alt =
+      `Dust Table head-camera observation at ${Math.round(progress)} percent episode progress`;
+
+    if (methodMemoryCaptionV13) {
+      methodMemoryCaptionV13.textContent =
+        `Latent history encoded from 0 → t (${Math.round(progress)}%)`;
+    }
+  };
+
+  const renderMethodStatusV13 = () => {
+    if (!activeMethodStreamsV13.size) {
+      methodExplorerStatus.textContent =
+        "Select at least one history stream to populate latent memory.";
+      return;
+    }
+
+    const streamDescription = describeSelectionV13(
+      activeMethodStreamsV13,
+      streamOrderV13,
+      streamLabelsV13,
+    ).toLowerCase();
+    methodExplorerStatus.textContent =
+      selectedMethodStageV13 === "memory"
+        ? `${streamDescription} history from timestep 0 through t is compressed into latent memory.`
+        : "The encoded 0→t history, current observation, and task instruction jointly condition the VLA.";
+  };
+
+  const renderTaskChartV13 = (row) => {
+    methodTaskChart.replaceChildren();
+
+    if (!row) {
+      const empty = document.createElement("div");
+      empty.className = "method-task-chart-empty";
+      empty.innerHTML =
+        "<strong>This combination was not reported.</strong>" +
+        "<span>Select a configuration represented by an exact appendix row.</span>";
+      methodTaskChart.append(empty);
+      return;
+    }
+
+    rmbenchTasksV13.forEach((task, index) => {
+      const value = row.values[index];
+      const item = document.createElement("div");
+      const heading = document.createElement("div");
+      const label = document.createElement("span");
+      const score = document.createElement("strong");
+      const track = document.createElement("span");
+      const fill = document.createElement("span");
+
+      item.className = "method-task-result";
+      heading.className = "method-task-result-heading";
+      label.textContent = task.short;
+      label.title = task.full;
+      score.textContent = `${value}%`;
+      track.className = "method-task-result-track";
+      fill.style.width = `${value}%`;
+      track.append(fill);
+      heading.append(label, score);
+      item.append(heading, track);
+      methodTaskChart.append(item);
+    });
+  };
+
+  const renderMethodEvidenceV13 = () => {
+    let row = null;
+    let requestedLabel = "";
+
+    if (selectedEvidenceModeV13 === "inputs") {
+      const key = canonicalSelectionV13(
+        activeMethodStreamsV13,
+        streamOrderV13,
+      );
+      row = inputAblationsV13[key] || null;
+      requestedLabel = describeSelectionV13(
+        activeMethodStreamsV13,
+        streamOrderV13,
+        streamLabelsV13,
+      );
+    } else if (selectedEvidenceModeV13 === "objectives") {
+      const key = canonicalSelectionV13(
+        activeMethodObjectivesV13,
+        objectiveOrderV13,
+      );
+      row = objectiveAblationsV13[key] || null;
+      requestedLabel = describeSelectionV13(
+        activeMethodObjectivesV13,
+        objectiveOrderV13,
+        objectiveLabelsV13,
+      );
+    } else if (selectedEvidenceModeV13 === "capacity") {
+      row = selectedCapacityEvidenceV13;
+      requestedLabel = row?.label || "Memory bottleneck capacity";
+    } else {
+      row = recipeAblationsV13[selectedRecipeV13];
+      requestedLabel = row.label;
+    }
+
+    methodRecipeOptions.hidden = selectedEvidenceModeV13 !== "recipe";
+    methodRecipeButtonsV13.forEach((button) => {
+      const isActive = button.dataset.methodRecipe === selectedRecipeV13;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+
+    if (!row) {
+      methodEvidenceChip.textContent = "No matching appendix row";
+      methodEvidenceLabel.textContent = requestedLabel;
+      methodEvidenceScore.textContent = "—";
+      methodEvidenceDelta.textContent = "Not reported";
+      methodEvidenceNote.textContent =
+        "The paper does not report this exact combination, so no value is inferred or interpolated.";
+      renderTaskChartV13(null);
+      return;
+    }
+
+    const difference = 72.7 - row.average;
+    methodEvidenceChip.textContent = "Exact appendix row";
+    methodEvidenceLabel.textContent = row.label;
+    methodEvidenceScore.textContent = `${row.average.toFixed(1)}%`;
+    if (Math.abs(difference) < 0.05) {
+      methodEvidenceDelta.textContent = "Best reported configuration";
+    } else {
+      methodEvidenceDelta.textContent = selectedEvidenceModeV13 === "capacity"
+        ? `${difference.toFixed(1)} points below B = 256`
+        : `${difference.toFixed(1)} points below full IMPRINT`;
+    }
+    methodEvidenceNote.textContent = row.note ||
+      "Per-task RMBench success (%). Every value below is copied from the corresponding appendix row.";
+    renderTaskChartV13(row);
+  };
+
+  const selectEvidenceModeV13 = (mode) => {
+    selectedEvidenceModeV13 = mode;
+    methodEvidenceTabsV13.forEach((tab) => {
+      const isActive = tab.dataset.methodEvidence === mode;
+      tab.classList.toggle("is-active", isActive);
+      tab.setAttribute("aria-selected", String(isActive));
+    });
+    renderMethodEvidenceV13();
+  };
+
+  const renderMethodStreamsV13 = (showEvidence = false) => {
+    methodStreamButtonsV13.forEach((button) => {
+      const stream = button.dataset.methodStream;
+      const isActive = activeMethodStreamsV13.has(stream);
+      const state = button.querySelector(".method-stream-state");
+      const flow = methodExplorer.querySelector(
+        `[data-method-flow="${stream}"]`,
+      );
+
+      button.classList.toggle("is-disabled", !isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+      if (state) {
+        state.textContent = isActive ? "On" : "Off";
+      }
+      flow?.classList.toggle("is-disabled", !isActive);
+    });
+
+    methodMemoryTokensV13.forEach((token) => {
+      token.classList.toggle(
+        "is-muted",
+        !activeMethodStreamsV13.has(token.dataset.memoryStream),
+      );
+    });
+    methodPolicyMemoryTokensV13.forEach((token) => {
+      token.classList.toggle(
+        "is-muted",
+        !activeMethodStreamsV13.has(token.dataset.policyMemoryStream),
+      );
+    });
+
+    const hasStreams = activeMethodStreamsV13.size > 0;
+    methodExplorer.classList.toggle("has-no-streams", !hasStreams);
+    methodMemoryNodeV13?.classList.toggle("is-empty", !hasStreams);
+    methodOutputTrackV13?.classList.toggle("is-disabled", !hasStreams);
+    methodPolicyMemoryLabel.textContent = hasStreams
+      ? streamOrderV13
+          .filter((stream) => activeMethodStreamsV13.has(stream))
+          .map((stream) => streamLabelsV13[stream])
+          .join(" · ")
+      : "No history selected";
+    renderMethodStatusV13();
+
+    if (showEvidence) {
+      selectEvidenceModeV13("inputs");
+    }
+  };
+
+  const renderMethodObjectivesV13 = (showEvidence = false) => {
+    methodObjectiveButtonsV13.forEach((button) => {
+      const objective = button.dataset.methodObjective;
+      const isActive = activeMethodObjectivesV13.has(objective);
+      const state = button.querySelector(".method-objective-state");
+
+      button.classList.toggle("is-disabled", !isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+      if (state) {
+        state.textContent = isActive ? "On" : "Off";
+      }
+    });
+
+    if (showEvidence) {
+      selectEvidenceModeV13("objectives");
+    }
+  };
+
+  const selectMethodStageV13 = (stage) => {
+    selectedMethodStageV13 = stage;
+    methodExplorer.dataset.stage = stage;
+    methodStageTabsV13.forEach((tab) => {
+      const isActive = tab.dataset.methodStage === stage;
+      tab.classList.toggle("is-active", isActive);
+      tab.setAttribute("aria-selected", String(isActive));
+    });
+    methodStageContentsV13.forEach((content) => {
+      content.hidden = content.dataset.methodContent !== stage;
+    });
+    renderMethodStatusV13();
+
+    if (stage === "memory") {
+      selectEvidenceModeV13("objectives");
+    } else {
+      selectedRecipeV13 = "joint";
+      selectEvidenceModeV13("recipe");
+    }
+  };
+
+  methodStageTabsV13.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      selectMethodStageV13(tab.dataset.methodStage);
+    });
+  });
+  methodStreamButtonsV13.forEach((button) => {
+    button.addEventListener("click", () => {
+      const stream = button.dataset.methodStream;
+      if (activeMethodStreamsV13.has(stream)) {
+        activeMethodStreamsV13.delete(stream);
+      } else {
+        activeMethodStreamsV13.add(stream);
+      }
+      renderMethodStreamsV13(true);
+    });
+  });
+  methodObjectiveButtonsV13.forEach((button) => {
+    button.addEventListener("click", () => {
+      const objective = button.dataset.methodObjective;
+      if (activeMethodObjectivesV13.has(objective)) {
+        activeMethodObjectivesV13.delete(objective);
+      } else {
+        activeMethodObjectivesV13.add(objective);
+      }
+      renderMethodObjectivesV13(true);
+    });
+  });
+  methodEvidenceTabsV13.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      selectEvidenceModeV13(tab.dataset.methodEvidence);
+    });
+  });
+  methodRecipeButtonsV13.forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedRecipeV13 = button.dataset.methodRecipe;
+      renderMethodEvidenceV13();
+    });
+  });
+  methodHistorySliderV13.addEventListener("input", renderMethodTimelineV13);
+  methodExplorer.addEventListener("method-capacity-change", ({ detail }) => {
+    if (
+      !detail ||
+      !Number.isFinite(detail.average) ||
+      !Array.isArray(detail.values) ||
+      detail.values.length !== rmbenchTasksV13.length
+    ) {
+      return;
+    }
+
+    selectedCapacityEvidenceV13 = {
+      label: `Memory bottleneck · B = ${detail.capacity}`,
+      average: detail.average,
+      values: detail.values,
+      note: `Per-task RMBench success (%) for B = ${detail.capacity}, copied from the exact appendix row.`,
+    };
+    selectEvidenceModeV13("capacity");
+  });
+
+  selectMethodStageV13(selectedMethodStageV13);
+  renderMethodStreamsV13();
+  renderMethodObjectivesV13();
+  renderMethodTimelineV13();
+}
+
+const methodStyleExampleV13 = document.getElementById("method-example");
+const methodStyleRolloutGridV13 = document.getElementById(
+  "method-style-rollout-grid",
+);
+const methodStyleRolloutTitleV13 = document.getElementById(
+  "method-style-rollout-title",
+);
+const methodStyleRolloutSummaryV13 = document.getElementById(
+  "method-style-rollout-summary",
+);
+
+if (
+  methodStyleExampleV13 &&
+  methodStyleRolloutGridV13 &&
+  methodStyleRolloutTitleV13 &&
+  methodStyleRolloutSummaryV13
+) {
+  const styleDemoFiguresV13 = [
+    ...methodStyleExampleV13.querySelectorAll("[data-method-demo-style]"),
+  ];
+  const styleDemoVideosV13 = [
+    ...methodStyleExampleV13.querySelectorAll(".method-style-demo-video"),
+  ];
+  const styleExecutionsV13 = {
+    Orange: {
+      1: { trial: 2, successful: true },
+      2: { trial: 4, successful: true },
+      3: { trial: 5, successful: true },
+      4: { trial: 7, successful: true },
+    },
+    "Dark blue": {
+      1: { trial: 9, successful: false },
+      2: { trial: 11, successful: true },
+      3: { trial: 13, successful: true },
+      4: { trial: 15, successful: true },
+    },
+    Blue: {
+      1: { trial: 17, successful: true },
+      2: { trial: 19, successful: true },
+      3: { trial: 21, successful: true },
+      4: { trial: 23, successful: false },
+    },
+    Pink: {
+      1: { trial: 25, successful: false },
+      2: { trial: 27, successful: true },
+      3: { trial: 29, successful: true },
+      4: { trial: 31, successful: true },
+    },
+  };
+  const exactOodExecutionsV18 = {
+    Orange: {
+      1: { trial: 2, towelColor: "Light gray", successful: true },
+      2: { trial: 3, towelColor: "Light gray", successful: false },
+      3: { trial: 5, towelColor: "Light gray", successful: true },
+      4: { trial: 7, towelColor: "Light gray", successful: false },
+    },
+    "Dark blue": {
+      1: { trial: 9, towelColor: "Purple", successful: true },
+      2: { trial: 12, towelColor: "Purple", successful: true },
+      3: { trial: 13, towelColor: "Purple", successful: false },
+      4: { trial: 15, towelColor: "Purple", successful: true },
+    },
+    Blue: {
+      1: { trial: 17, towelColor: "Charcoal", successful: true },
+      2: { trial: 19, towelColor: "Charcoal", successful: false },
+      3: { trial: 21, towelColor: "Charcoal", successful: false },
+      4: { trial: 23, towelColor: "Charcoal", successful: true },
+    },
+    Pink: {
+      1: { trial: 25, towelColor: "Striped", successful: false },
+      2: { trial: 27, towelColor: "Striped", successful: true },
+      3: { trial: 29, towelColor: "Striped", successful: false },
+      4: { trial: 31, towelColor: "Striped", successful: false },
+    },
+  };
+  const reducedMotionV13 = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+  let selectedColorV13 = "Orange";
+  let selectedStyleV13 = 1;
+  let methodStyleExampleVisibleV13 = false;
+
+  const playVisibleStyleVideosV13 = () => {
+    if (!methodStyleExampleVisibleV13 || reducedMotionV13) {
+      return;
+    }
+
+    [
+      ...styleDemoVideosV13,
+      ...methodStyleRolloutGridV13.querySelectorAll("video"),
+    ].forEach((video) => {
+      activateDeferredVideo(video);
+      video.play()?.catch?.(() => {});
+    });
+  };
+
+  const renderStyleExecutionV13 = () => {
+    const execution =
+      styleExecutionsV13[selectedColorV13][selectedStyleV13];
+    const trialId = String(execution.trial).padStart(2, "0");
+    const exactOodExecution =
+      exactOodExecutionsV18[selectedColorV13]?.[selectedStyleV13];
+    const oodExecution = exactOodExecution
+      ? {
+          ...exactOodExecution,
+          demoColor: selectedColorV13,
+          exactMatch: true,
+        }
+      : null;
+    const oodTrialId = oodExecution
+      ? String(oodExecution.trial).padStart(2, "0")
+      : "";
+    methodStyleRolloutGridV13
+      .querySelectorAll("video")
+      .forEach((video) => video.pause());
+    methodStyleRolloutGridV13.replaceChildren();
+    methodStyleRolloutGridV13.classList.toggle(
+      "has-ood-comparison",
+      Boolean(oodExecution),
+    );
+    methodStyleRolloutTitleV13.textContent =
+      `${selectedColorV13} towel · Style ${selectedStyleV13} ${oodExecution ? "executions" : "execution"}`;
+    methodStyleRolloutSummaryV13.textContent =
+      oodExecution
+        ? "The selected IMPRINT and matched OOD executions use the same demonstration; badges mark each outcome."
+        : "Only the selected IMPRINT execution is available for this demonstration.";
+
+    const createExecutionCardV18 = ({
+      titleText,
+      successful,
+      poster,
+      source,
+      ariaLabel,
+      cameraLabel,
+      note,
+      ood = false,
+    }) => {
+      const card = document.createElement("article");
+      const heading = document.createElement("div");
+      const title = document.createElement("strong");
+      const badge = document.createElement("span");
+      const videoFrame = document.createElement("div");
+      const video = document.createElement("video");
+      const camera = document.createElement("span");
+      const detail = document.createElement("p");
+
+      card.className =
+        `method-style-rollout-card ${successful ? "is-success" : "is-failure"}${ood ? " is-ood" : ""}`;
+      heading.className = "method-style-rollout-card-heading";
+      title.textContent = titleText;
+      badge.textContent = ood
+        ? successful
+          ? "OOD success"
+          : "OOD failure"
+        : successful
+          ? "Success"
+          : "Failure";
+      videoFrame.className = "method-style-rollout-video";
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.preload = "none";
+      video.poster = poster;
+      video.setAttribute("aria-label", ariaLabel);
+      deferVideoSource(video, source, methodStyleExampleVisibleV13);
+      camera.textContent = cameraLabel;
+      detail.className = "method-style-rollout-note";
+      detail.textContent = note;
+
+      heading.append(title, badge);
+      videoFrame.append(video, camera);
+      card.append(heading, videoFrame, detail);
+      return card;
+    };
+
+    const selectedCard = createExecutionCardV18({
+      titleText:
+        `In-distribution · ${selectedColorV13} towel · Style ${selectedStyleV13}`,
+      successful: execution.successful,
+      poster: `static/images/method-style-rollouts/trial-${trialId}.jpg`,
+      source:
+        `static/videos/rollouts/ours/fold-cloth/trial-${trialId}.mp4` +
+        "?v=20261010-combination-execution",
+      ariaLabel:
+        `${selectedColorV13} towel, Style ${selectedStyleV13}, ${execution.successful ? "successful" : "failed"} IMPRINT execution, external view`,
+      cameraLabel: "IMPRINT · External view",
+      note:
+        `Conditioned on the selected ${selectedColorV13} towel, Style ${selectedStyleV13} demonstration.`,
+    });
+    methodStyleRolloutGridV13.append(selectedCard);
+
+    if (oodExecution) {
+      const oodCard = createExecutionCardV18({
+        titleText:
+          `OOD · ${oodExecution.towelColor} towel · Style ${selectedStyleV13}`,
+        successful: oodExecution.successful,
+        poster:
+          `static/images/method-style-rollouts-ood/trial-${oodTrialId}.jpg`,
+        source:
+          `static/videos/rollouts/ours-ood/fold-cloth/trial-${oodTrialId}.mp4` +
+          "?v=20261011-complete-ood-comparison",
+        ariaLabel:
+          `${oodExecution.towelColor} OOD towel, Style ${selectedStyleV13}, ${oodExecution.successful ? "successful" : "failed"} IMPRINT OOD execution conditioned on the selected ${oodExecution.demoColor} towel demonstration, external view`,
+        cameraLabel: "IMPRINT OOD · External view",
+        note:
+          `Conditioned on the selected ${oodExecution.demoColor} towel, Style ${selectedStyleV13} demonstration.`,
+        ood: true,
+      });
+      methodStyleRolloutGridV13.append(oodCard);
+    }
+
+    playVisibleStyleVideosV13();
+  };
+
+  const selectStyleCombinationV13 = (color, style) => {
+    selectedColorV13 = color;
+    selectedStyleV13 = style;
+    styleDemoFiguresV13.forEach((figure) => {
+      const figureColor =
+        figure.closest("[data-method-demo-color]")?.dataset.methodDemoColor;
+      const isActive =
+        figureColor === color &&
+        Number(figure.dataset.methodDemoStyle) === style;
+      figure.classList.toggle("is-selected-combination", isActive);
+      figure.setAttribute("aria-pressed", String(isActive));
+    });
+    renderStyleExecutionV13();
+  };
+
+  styleDemoFiguresV13.forEach((figure) => {
+    const color =
+      figure.closest("[data-method-demo-color]")?.dataset.methodDemoColor;
+    const style = Number(figure.dataset.methodDemoStyle);
+    figure.setAttribute("role", "button");
+    figure.setAttribute("tabindex", "0");
+    figure.setAttribute(
+      "aria-label",
+      `Select ${color} towel, Style ${style}`,
+    );
+    figure.addEventListener("click", () => {
+      selectStyleCombinationV13(color, style);
+    });
+    figure.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") {
+        return;
+      }
+      event.preventDefault();
+      selectStyleCombinationV13(color, style);
+    });
+  });
+
+  if ("IntersectionObserver" in window) {
+    const styleExampleObserverV13 = new IntersectionObserver(
+      (entries) => {
+        methodStyleExampleVisibleV13 = Boolean(entries[0]?.isIntersecting);
+        if (methodStyleExampleVisibleV13) {
+          playVisibleStyleVideosV13();
+        } else {
+          [
+            ...styleDemoVideosV13,
+            ...methodStyleRolloutGridV13.querySelectorAll("video"),
+          ].forEach((video) => video.pause());
+        }
+      },
+      { threshold: 0.04, rootMargin: "180px 0px" },
+    );
+    styleExampleObserverV13.observe(methodStyleExampleV13);
+  } else {
+    methodStyleExampleVisibleV13 = true;
+  }
+
+  selectStyleCombinationV13(selectedColorV13, selectedStyleV13);
+}
+
 const rolloutTasks = {
   "dust-table": {
     label: "Dust Table",
@@ -270,8 +2147,7 @@ const rolloutTasks = {
   "fold-cloth": {
     label: "Fold Cloth",
     total: 32,
-    prompt:
-      "The robot must reproduce the folding steps of the demonstration and reach a final shape close to the demonstrated one. Repeated grasp attempts are allowed.",
+    prompt: "Follow the example to fold the towel.",
     image: "static/images/realworld-fold-cloth.png",
     imageAlt: "Fold Cloth success-rate distributions across real-world methods",
     analysis:
@@ -826,8 +2702,8 @@ if (
     const details = foldDetailsForTrial(method, trial);
     const colorSlug = foldDemoColorSlugs[details.demoColor];
     const source =
-      `static/videos/in-context/fold/${colorSlug}/style-${details.style}.mp4` +
-      "?v=20261002-matched-fold-context";
+      `static/videos/in-context/external/${colorSlug}/style-${details.style}.mp4` +
+      "?v=20261010-external-only";
 
     foldContextTitle.textContent =
       `${details.demoColor} towel · Style ${details.style} demonstration`;
@@ -836,10 +2712,10 @@ if (
         ? `Matched to the selected ${details.rolloutColor} towel rollout.`
         : `${details.demoColor} demonstration paired with the selected ${details.rolloutColor} OOD towel rollout.`;
     foldContextCaption.textContent =
-      `${details.demoColor} towel · Style ${details.style} · Head, left wrist, and right wrist views`;
+      `${details.demoColor} towel · Style ${details.style} · External camera view`;
     foldContextVideo.setAttribute(
       "aria-label",
-      `${details.demoColor} towel, folding style ${details.style} in-context demonstration, head, left wrist, and right wrist views`,
+      `${details.demoColor} towel, folding style ${details.style} in-context demonstration, external camera view`,
     );
     deferVideoSource(foldContextVideo, source, loadVideoNow);
   };
@@ -1348,6 +3224,35 @@ if (
   let selectedRobocasaTrial = Number(robocasaTrialSlider.value);
   let synchronizingRobocasaVideos = false;
 
+  const setRobocasaVideoState = (video, state, message) => {
+    const frame = video.closest(".robocasa-video-frame");
+    const statusText = frame?.querySelector(".robocasa-video-status-text");
+    const retryButton = frame?.querySelector(".robocasa-video-retry");
+
+    if (!frame || !statusText || !retryButton) {
+      return;
+    }
+
+    frame.dataset.videoState = state;
+    video.setAttribute("aria-busy", String(state === "loading"));
+    statusText.textContent = message;
+    retryButton.hidden = state !== "error";
+  };
+
+  const retryRobocasaVideo = (video) => {
+    if (!video.dataset.src) {
+      return;
+    }
+
+    setRobocasaVideoState(video, "loading", "Loading rollout…");
+    video.removeAttribute("src");
+    video.load();
+
+    window.requestAnimationFrame(() => {
+      activateDeferredVideo(video);
+    });
+  };
+
   const formatRobocasaVariant = (variant) =>
     variant
       .replace(/^Mem/, "")
@@ -1407,6 +3312,32 @@ if (
   };
 
   robocasaVideos.forEach(({ element }) => {
+    const retryButton = element
+      .closest(".robocasa-video-frame")
+      ?.querySelector(".robocasa-video-retry");
+
+    setRobocasaVideoState(element, "loading", "Loading rollout…");
+
+    element.addEventListener("loadstart", () => {
+      setRobocasaVideoState(element, "loading", "Loading rollout…");
+    });
+    element.addEventListener("loadeddata", () => {
+      setRobocasaVideoState(element, "ready", "");
+    });
+    element.addEventListener("canplay", () => {
+      setRobocasaVideoState(element, "ready", "");
+    });
+    element.addEventListener("error", () => {
+      setRobocasaVideoState(
+        element,
+        "error",
+        "This rollout could not be loaded.",
+      );
+    });
+    retryButton?.addEventListener("click", () => {
+      retryRobocasaVideo(element);
+    });
+
     element.addEventListener("play", () => {
       synchronizeRobocasaVideos(element, "play");
     });
@@ -1519,6 +3450,7 @@ if (
         .join("/");
 
       element.pause();
+      setRobocasaVideoState(element, "loading", "Loading rollout…");
       deferVideoSource(element, source, loadVideoNow);
       element.setAttribute(
         "aria-label",
@@ -1571,22 +3503,37 @@ if (
     scheduleRobocasaRender.flush,
   );
 
-  fetch("static/data/robocasa-rollouts.json")
-    .then((response) => {
+  const loadRobocasaArchive = () => {
+    if (window.IMPRINT_ROBOCASA_ARCHIVE) {
+      return Promise.resolve(window.IMPRINT_ROBOCASA_ARCHIVE);
+    }
+
+    return fetch("static/data/robocasa-rollouts.json").then((response) => {
       if (!response.ok) {
         throw new Error("RoboCasa archive index unavailable.");
       }
       return response.json();
-    })
+    });
+  };
+
+  loadRobocasaArchive()
     .then((archive) => {
       robocasaArchive = archive;
       robocasaTaskSelect.disabled = false;
       robocasaMethodSlider.disabled = false;
       robocasaTrialSlider.disabled = false;
       renderRobocasaTrialGrid();
-      renderRobocasaRollout();
+      renderRobocasaRollout(true);
     })
-    .catch(() => {
+    .catch((error) => {
+      console.error("Unable to initialize the RoboCasa rollout archive.", error);
+      robocasaVideos.forEach(({ element }) => {
+        setRobocasaVideoState(
+          element,
+          "error",
+          "The rollout archive could not be loaded.",
+        );
+      });
       robocasaRolloutTitle.textContent = "RoboCasa archive unavailable";
       robocasaRolloutVariant.textContent =
         "The local video archive could not be loaded.";
@@ -1595,32 +3542,85 @@ if (
     });
 }
 
-const attentionFrame = document.getElementById("attention-frame");
+const attentionVisualization = document.getElementById(
+  "attention-visualization",
+);
+const attentionHeatmap = document.getElementById("attention-heatmap");
 const attentionSlider = document.getElementById("attention-slider");
 const attentionStep = document.getElementById("attention-step");
 const attentionTabs = [...document.querySelectorAll("[data-attention-method]")];
 const attentionExplorer = document.querySelector(".attention-explorer");
-const attentionAssetVersion = "20260930-clear-labels";
+const attentionSelectedMethod = document.getElementById(
+  "attention-selected-method",
+);
+const attentionSelectedScore = document.getElementById(
+  "attention-selected-score",
+);
+const attentionSelectedDescription = document.getElementById(
+  "attention-selected-description",
+);
+const attentionProgressLabel = document.getElementById(
+  "attention-progress-label",
+);
+const attentionFrameCaption = document.getElementById(
+  "attention-frame-caption",
+);
+const attentionPlayButton = document.getElementById("attention-play-button");
+const attentionPlayLabel = document.getElementById("attention-play-label");
+const attentionActionStep = document.getElementById("attention-action-step");
+const attentionHistoryEnd = document.getElementById("attention-history-end");
+const attentionData = window.IMPRINT_ATTENTION_DATA?.methods || {};
+const attentionAssetVersion =
+  window.IMPRINT_ATTENTION_DATA?.version || "20261011-web-native-v1";
+const attentionStreamNames = ["head", "left", "right", "action", "state"];
+const attentionMassNames = ["latent", "recent", "action", "state"];
+const attentionStreamUi = Object.fromEntries(
+  attentionStreamNames.map((stream) => [
+    stream,
+    {
+      weight: document.getElementById(`attention-weight-${stream}`),
+      step: document.getElementById(`attention-history-step-${stream}`),
+      bar: document.getElementById(`attention-weight-bar-${stream}`),
+      marker: document.querySelector(`[data-attention-marker="${stream}"]`),
+    },
+  ]),
+);
+const attentionMassUi = Object.fromEntries(
+  attentionMassNames.map((source) => [
+    source,
+    {
+      value: document.getElementById(`attention-mass-${source}`),
+      bar: document.getElementById(`attention-mass-bar-${source}`),
+    },
+  ]),
+);
 const attentionMethods = {
   e2e: {
     count: 30,
     label: "E2E",
     description: "end-to-end action supervision",
+    summary: "Memory + policy from scratch",
+    score: "15%",
   },
   frozen: {
     count: 30,
     label: "Frozen",
-    description: "frozen bootstrapped memory",
+    description: "frozen pretrained memory",
+    summary: "Pretrained memory kept fixed",
+    score: "35%",
   },
   ours: {
     count: 20,
     label: "Ours",
     description: "jointly adapted IMPRINT",
+    summary: "Joint memory-policy adaptation",
+    score: "100%",
   },
 };
 
 if (
-  attentionFrame &&
+  attentionVisualization &&
+  attentionHeatmap &&
   attentionSlider &&
   attentionStep &&
   attentionTabs.length &&
@@ -1628,39 +3628,217 @@ if (
 ) {
   let selectedAttentionMethod = "ours";
   let attentionIsActive = false;
+  let attentionPlaybackTimer = null;
+  let lastAttentionSprite = "";
+  let lastAttentionHeatmap = "";
+
+  const clampAttentionValue = (value, minimum, maximum) =>
+    Math.min(maximum, Math.max(minimum, value));
+
+  const versionAttentionAsset = (source) => {
+    const assetUrl = new URL(source, document.baseURI);
+    assetUrl.searchParams.set("v", attentionAssetVersion);
+    return assetUrl.href;
+  };
+
+  const getAttentionFrames = () =>
+    attentionData[selectedAttentionMethod]?.frames || [];
+
+  const getAttentionCount = () => {
+    const frames = getAttentionFrames();
+    return frames.length || attentionMethods[selectedAttentionMethod].count;
+  };
+
+  const formatAttentionHistoryStep = (stream) => {
+    if (!stream) {
+      return "History unavailable";
+    }
+    if (stream.start === stream.end) {
+      return `History step ${stream.start}`;
+    }
+    return `History steps ${stream.start}–${stream.end}`;
+  };
+
+  const setAttentionPlaybackState = (isPlaying) => {
+    if (!attentionPlayButton || !attentionPlayLabel) {
+      return;
+    }
+
+    attentionPlayButton.classList.toggle("is-playing", isPlaying);
+    attentionPlayButton.setAttribute("aria-pressed", String(isPlaying));
+    attentionPlayLabel.textContent = isPlaying ? "Pause trace" : "Play trace";
+  };
+
+  const stopAttentionPlayback = () => {
+    if (attentionPlaybackTimer !== null) {
+      window.clearInterval(attentionPlaybackTimer);
+      attentionPlaybackTimer = null;
+    }
+    setAttentionPlaybackState(false);
+  };
+
+  const renderAttentionDetail = (frameData, method) => {
+    if (!frameData) {
+      return;
+    }
+
+    const spriteSource = versionAttentionAsset(frameData.sprite);
+    const heatmapSource = versionAttentionAsset(frameData.heatmap);
+    if (spriteSource !== lastAttentionSprite) {
+      attentionVisualization.style.setProperty(
+        "--attention-sprite",
+        `url("${spriteSource}")`,
+      );
+      lastAttentionSprite = spriteSource;
+    }
+    if (heatmapSource !== lastAttentionHeatmap) {
+      attentionHeatmap.src = heatmapSource;
+      lastAttentionHeatmap = heatmapSource;
+    }
+
+    attentionHeatmap.alt =
+      `Attention over retained history for ${method.description} at action step ${frameData.step}`;
+    if (attentionActionStep) {
+      attentionActionStep.textContent = `Action step ${frameData.step}`;
+    }
+    if (attentionHistoryEnd) {
+      attentionHistoryEnd.textContent = `Episode step ${frameData.step}`;
+    }
+
+    const validStreams = attentionStreamNames
+      .map((stream) => frameData.streams?.[stream])
+      .filter(Boolean);
+    const peakWeight = Math.max(
+      0.000001,
+      ...validStreams.map((stream) => Number(stream.weight) || 0),
+    );
+    const historyDenominator = Math.max(1, Number(frameData.step) || 0);
+
+    attentionStreamNames.forEach((streamName) => {
+      const stream = frameData.streams?.[streamName];
+      const ui = attentionStreamUi[streamName];
+      if (!stream || !ui) {
+        return;
+      }
+
+      const weight = Number(stream.weight) || 0;
+      if (ui.weight) {
+        ui.weight.textContent = `w = ${weight.toFixed(4)}`;
+      }
+      if (ui.step) {
+        ui.step.textContent = formatAttentionHistoryStep(stream);
+      }
+      if (ui.bar) {
+        ui.bar.style.width = `${clampAttentionValue(
+          (weight / peakWeight) * 100,
+          3,
+          100,
+        )}%`;
+      }
+      if (ui.marker) {
+        const startPercent = clampAttentionValue(
+          (Number(stream.start) / historyDenominator) * 100,
+          0,
+          100,
+        );
+        const endPercent = clampAttentionValue(
+          (Number(stream.end) / historyDenominator) * 100,
+          startPercent,
+          100,
+        );
+        const isPoint = Number(stream.start) === Number(stream.end);
+        const centerPercent = clampAttentionValue(
+          (startPercent + endPercent) / 2,
+          0.5,
+          99.5,
+        );
+        ui.marker.classList.toggle("is-point", isPoint);
+        ui.marker.style.left = isPoint
+          ? `${centerPercent}%`
+          : `${startPercent}%`;
+        ui.marker.style.width = isPoint
+          ? "8px"
+          : `${Math.max(0.7, endPercent - startPercent)}%`;
+        ui.marker.title =
+          `${formatAttentionHistoryStep(stream)} · w = ${weight.toFixed(4)}`;
+      }
+    });
+
+    attentionMassNames.forEach((source) => {
+      const value = Number(frameData.mass?.[source]) || 0;
+      const ui = attentionMassUi[source];
+      const percentage = clampAttentionValue(value * 100, 0, 100);
+      if (ui?.value) {
+        ui.value.textContent = `${percentage.toFixed(1)}%`;
+      }
+      if (ui?.bar) {
+        ui.bar.style.width = `${percentage}%`;
+      }
+    });
+  };
 
   const renderAttention = () => {
     const method = attentionMethods[selectedAttentionMethod];
+    const frames = getAttentionFrames();
+    const count = getAttentionCount();
     const progress = Number(attentionSlider.value);
-    const frameIndex = Math.round((progress / 100) * (method.count - 1));
+    const frameIndex = Math.round((progress / 100) * (count - 1));
     const frameNumber = frameIndex + 1;
-    const source =
-      `static/images/attention/${selectedAttentionMethod}/frame-${String(frameIndex).padStart(2, "0")}.jpg` +
-      `?v=${attentionAssetVersion}`;
+    const frameData = frames[frameIndex];
+    const actionStep = frameData?.step;
 
-    attentionFrame.src = source;
-    attentionFrame.alt = `Attention visualization for ${method.description}, frame ${frameNumber} of ${method.count}`;
-    attentionStep.textContent = `Frame ${frameNumber} / ${method.count}`;
+    renderAttentionDetail(frameData, method);
+    attentionStep.textContent = actionStep === undefined
+      ? `Frame ${frameNumber} / ${count}`
+      : `Step ${actionStep} · frame ${frameNumber} / ${count}`;
+    attentionSlider.style.setProperty(
+      "--attention-progress",
+      `${Math.round(progress)}%`,
+    );
+    attentionExplorer.dataset.attentionActive = selectedAttentionMethod;
 
-    if (attentionIsActive) {
+    if (attentionSelectedMethod) {
+      attentionSelectedMethod.textContent = method.label;
+    }
+    if (attentionSelectedScore) {
+      attentionSelectedScore.textContent = method.score;
+    }
+    if (attentionSelectedDescription) {
+      attentionSelectedDescription.textContent =
+        `${method.summary} · task success`;
+    }
+    if (attentionProgressLabel) {
+      attentionProgressLabel.textContent = actionStep === undefined
+        ? `${Math.round(progress)}% through episode`
+        : `${Math.round(progress)}% · action step ${actionStep}`;
+    }
+    if (attentionFrameCaption) {
+      attentionFrameCaption.textContent = actionStep === undefined
+        ? `${method.label} · frame ${frameNumber} of ${count}`
+        : `${method.label} · action step ${actionStep} · frame ${frameNumber} of ${count}`;
+    }
+
+    if (attentionIsActive && frames.length) {
       [frameIndex - 1, frameIndex + 1]
-        .filter((index) => index >= 0 && index < method.count)
+        .filter((index) => index >= 0 && index < frames.length)
         .forEach((index) => {
-          const preload = new Image();
-          preload.src =
-            `static/images/attention/${selectedAttentionMethod}/frame-${String(index).padStart(2, "0")}.jpg` +
-            `?v=${attentionAssetVersion}`;
+          [frames[index].sprite, frames[index].heatmap].forEach((source) => {
+            const preload = new Image();
+            preload.src = versionAttentionAsset(source);
+          });
         });
     }
   };
 
   attentionSlider.addEventListener("input", () => {
+    stopAttentionPlayback();
     attentionIsActive = true;
     renderAttention();
   });
 
   attentionTabs.forEach((tab) => {
     tab.addEventListener("click", () => {
+      stopAttentionPlayback();
       attentionIsActive = true;
       selectedAttentionMethod = tab.dataset.attentionMethod;
 
@@ -1673,6 +3851,50 @@ if (
       renderAttention();
     });
   });
+
+  if (attentionPlayButton) {
+    attentionPlayButton.addEventListener("click", () => {
+      if (attentionPlaybackTimer !== null) {
+        stopAttentionPlayback();
+        return;
+      }
+
+      const currentProgress = Number(attentionSlider.value);
+      if (currentProgress >= 100) {
+        attentionSlider.value = "0";
+        renderAttention();
+      }
+
+      attentionIsActive = true;
+      setAttentionPlaybackState(true);
+      attentionPlaybackTimer = window.setInterval(() => {
+        const count = getAttentionCount();
+        const progress = Number(attentionSlider.value);
+        const frameIndex = Math.round((progress / 100) * (count - 1));
+        const nextFrameIndex = frameIndex + 1;
+
+        if (nextFrameIndex >= count) {
+          attentionSlider.value = "100";
+          renderAttention();
+          stopAttentionPlayback();
+          return;
+        }
+
+        attentionSlider.value = String(
+          Math.round((nextFrameIndex / (count - 1)) * 100),
+        );
+        renderAttention();
+      }, 720);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopAttentionPlayback();
+      }
+    });
+  }
+
+  renderAttention();
 
   if ("IntersectionObserver" in window) {
     const attentionObserver = new IntersectionObserver(
@@ -1692,4 +3914,246 @@ if (
     attentionIsActive = true;
     renderAttention();
   }
+}
+
+// Interactive memory-capacity ablation within the shared Method evidence panel.
+const methodCapacityControl = document.querySelector(
+  ".method-memory-capacity-control",
+);
+const methodCapacityButtons = [
+  ...document.querySelectorAll("[data-attention-capacity]"),
+];
+const methodCapacityTokens = [
+  ...document.querySelectorAll(".method-memory-token-grid [data-capacity-token]"),
+];
+const methodMemoryCapacityCaption = document.getElementById(
+  "method-memory-capacity-caption",
+);
+const methodCapacityTables = [
+  ...document.querySelectorAll("#capacity-values .data-table"),
+];
+
+if (
+  methodCapacityControl &&
+  methodCapacityButtons.length &&
+  methodCapacityTokens.length &&
+  methodCapacityTables.length
+) {
+  const capacitySuccessTable = methodCapacityTables[0];
+  const capacityColumns = new Map();
+  [...capacitySuccessTable.tHead.rows[0].cells].forEach((cell, index) => {
+    const match = cell.textContent.trim().match(/^(\d+)/);
+    if (match) {
+      capacityColumns.set(match[1], index);
+    }
+  });
+
+  const capacityRows = [...capacitySuccessTable.tBodies[0].rows];
+  const capacityRowsByName = new Map(
+    capacityRows.map((row) => [row.cells[0].textContent.trim(), row]),
+  );
+  const capacityTaskRows = capacityRows.filter((row) =>
+    row.cells[1].textContent.trim() === "RMBench" &&
+    !row.cells[0].textContent.includes("average"),
+  );
+  const capacityVisualCounts = {
+    1: 1,
+    4: 4,
+    16: 8,
+    64: 12,
+    256: 18,
+    1024: 24,
+  };
+
+  const getCapacityValue = (rowName, capacity) => {
+    const row = capacityRowsByName.get(rowName);
+    const column = capacityColumns.get(capacity);
+    return row && column !== undefined
+      ? Number(row.cells[column].textContent.trim())
+      : Number.NaN;
+  };
+
+  const renderCapacity = (capacity) => {
+    const column = capacityColumns.get(capacity);
+    if (column === undefined) {
+      return;
+    }
+
+    methodCapacityControl.dataset.capacity = capacity;
+    methodCapacityButtons.forEach((button) => {
+      const isActive = button.dataset.attentionCapacity === capacity;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+
+    const visibleTokens = capacityVisualCounts[capacity] || 1;
+    methodCapacityTokens.forEach((token, index) => {
+      token.classList.toggle("is-capacity-hidden", index >= visibleTokens);
+    });
+    if (methodMemoryCapacityCaption) {
+      methodMemoryCapacityCaption.textContent =
+        `Schematic token view · B = ${capacity}`;
+    }
+
+    const average = getCapacityValue("RMBench average", capacity);
+    const values = capacityTaskRows.map((row) =>
+      Number(row.cells[column].textContent.trim()),
+    );
+    if (methodExplorer && Number.isFinite(average)) {
+      methodExplorer.dispatchEvent(
+        new CustomEvent("method-capacity-change", {
+          detail: { capacity, average, values },
+        }),
+      );
+    }
+  };
+
+  methodCapacityButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      renderCapacity(button.dataset.attentionCapacity);
+    });
+  });
+
+  renderCapacity("256");
+}
+
+// Connected section navigation and scroll progress.
+const sectionRail = document.getElementById("section-rail");
+const sectionRailToggle = document.getElementById("section-rail-toggle");
+const sectionRailScrim = document.getElementById("section-rail-scrim");
+const sectionRailProgress = document.getElementById("section-rail-progress");
+const sectionRailLinks = [
+  ...document.querySelectorAll("[data-section-nav]"),
+];
+
+if (
+  sectionRail &&
+  sectionRailToggle &&
+  sectionRailScrim &&
+  sectionRailProgress &&
+  sectionRailLinks.length
+) {
+  const sectionRailEntries = sectionRailLinks
+    .map((link) => ({
+      id: link.dataset.sectionNav,
+      link,
+      section: document.getElementById(link.dataset.sectionNav),
+    }))
+    .filter((entry) => entry.section);
+  const sectionRailMobile = window.matchMedia("(max-width: 1320px)");
+  let activeSectionId = "";
+  let sectionRailFrame = null;
+
+  const setSectionRailOpen = (open) => {
+    const shouldOpen = Boolean(open && sectionRailMobile.matches);
+    document.body.classList.toggle("section-rail-open", shouldOpen);
+    sectionRailToggle.setAttribute("aria-expanded", String(shouldOpen));
+    sectionRailScrim.hidden = !shouldOpen;
+    if (sectionRailMobile.matches) {
+      sectionRail.toggleAttribute("inert", !shouldOpen);
+      sectionRail.setAttribute("aria-hidden", String(!shouldOpen));
+    } else {
+      sectionRail.removeAttribute("inert");
+      sectionRail.removeAttribute("aria-hidden");
+    }
+  };
+
+  const setActiveSection = (id) => {
+    if (!id || id === activeSectionId) {
+      return;
+    }
+    activeSectionId = id;
+    const activeIndex = sectionRailEntries.findIndex((entry) => entry.id === id);
+
+    sectionRailEntries.forEach((entry, index) => {
+      const isActive = entry.id === id;
+      entry.link.classList.toggle("is-active", isActive);
+      entry.link.classList.toggle("is-passed", index < activeIndex);
+      if (isActive) {
+        entry.link.setAttribute("aria-current", "location");
+      } else {
+        entry.link.removeAttribute("aria-current");
+      }
+    });
+  };
+
+  const updateSectionRail = () => {
+    sectionRailFrame = null;
+    if (!sectionRailEntries.length) {
+      return;
+    }
+
+    const viewportMarker = Math.min(260, window.innerHeight * 0.34);
+    let activeEntry = sectionRailEntries[0];
+    sectionRailEntries.forEach((entry) => {
+      if (entry.section.getBoundingClientRect().top <= viewportMarker) {
+        activeEntry = entry;
+      }
+    });
+
+    const documentHeight = document.documentElement.scrollHeight;
+    if (window.scrollY + window.innerHeight >= documentHeight - 4) {
+      activeEntry = sectionRailEntries[sectionRailEntries.length - 1];
+    }
+    setActiveSection(activeEntry.id);
+
+    const activeIndex = sectionRailEntries.indexOf(activeEntry);
+    const nextEntry = sectionRailEntries[activeIndex + 1];
+    let narrativeProgress = 100;
+    if (nextEntry) {
+      const currentTop = activeEntry.section.getBoundingClientRect().top;
+      const nextTop = nextEntry.section.getBoundingClientRect().top;
+      const sectionDistance = Math.max(1, nextTop - currentTop);
+      const sectionFraction = Math.min(
+        1,
+        Math.max(0, (viewportMarker - currentTop) / sectionDistance),
+      );
+      narrativeProgress =
+        ((activeIndex + sectionFraction) / (sectionRailEntries.length - 1)) * 100;
+    }
+    sectionRail.style.setProperty(
+      "--section-rail-progress",
+      `${narrativeProgress.toFixed(2)}%`,
+    );
+  };
+
+  const scheduleSectionRailUpdate = () => {
+    if (sectionRailFrame !== null) {
+      return;
+    }
+    sectionRailFrame = window.requestAnimationFrame(updateSectionRail);
+  };
+
+  sectionRailToggle.addEventListener("click", () => {
+    setSectionRailOpen(
+      sectionRailToggle.getAttribute("aria-expanded") !== "true",
+    );
+  });
+  sectionRailScrim.addEventListener("click", () => {
+    setSectionRailOpen(false);
+  });
+
+  sectionRailLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+      setActiveSection(link.dataset.sectionNav);
+      setSectionRailOpen(false);
+    });
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      setSectionRailOpen(false);
+    }
+  });
+
+  sectionRailMobile.addEventListener?.("change", () => {
+    setSectionRailOpen(false);
+    scheduleSectionRailUpdate();
+  });
+
+  window.addEventListener("scroll", scheduleSectionRailUpdate, { passive: true });
+  window.addEventListener("resize", scheduleSectionRailUpdate);
+  window.addEventListener("pageshow", scheduleSectionRailUpdate);
+  setSectionRailOpen(false);
+  updateSectionRail();
 }

@@ -10,12 +10,105 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="static/css/style.css?v=20261007-hero-playback">
-  <script defer src="static/js/main.js?v=20261007-hero-playback"></script>
+  <link rel="stylesheet" href="static/css/style.css?v=20261011-open-analysis-v44">
+  <script defer src="static/data/attention-explorer.js?v=20261011-web-native-v1"></script>
+  <script defer src="static/data/robocasa-rollouts.js?v=20261011-local-archive-v42"></script>
+  <script defer src="static/js/main.js?v=20261011-local-archive-v42"></script>
 </head>
 <body>
 
-<section class="hero">
+<button
+  class="section-rail-toggle"
+  id="section-rail-toggle"
+  type="button"
+  aria-controls="section-rail"
+  aria-expanded="false"
+>
+  <span class="section-rail-toggle-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+  <span>Sections</span>
+</button>
+<button
+  class="section-rail-scrim"
+  id="section-rail-scrim"
+  type="button"
+  aria-label="Close section navigation"
+  hidden
+></button>
+
+<nav class="section-rail" id="section-rail" aria-label="Page sections">
+  <div class="section-rail-heading">
+    <a href="#overview" aria-label="Back to the top">IMPRINT</a>
+    <span>Project map</span>
+  </div>
+  <div class="section-rail-scroll">
+    <span class="section-rail-line" aria-hidden="true">
+      <i id="section-rail-progress"></i>
+    </span>
+
+    <div class="section-rail-group">
+      <p>Start</p>
+      <a class="is-active" href="#overview" data-section-nav="overview" aria-current="location">
+        <i class="section-rail-dot" aria-hidden="true"></i>
+        <span><small>00</small>Overview</span>
+      </a>
+    </div>
+
+    <div class="section-rail-group">
+      <p>Approach</p>
+      <a href="#method" data-section-nav="method">
+        <i class="section-rail-dot" aria-hidden="true"></i>
+        <span><small>01</small>Method</span>
+      </a>
+      <a href="#method-example" data-section-nav="method-example">
+        <i class="section-rail-dot" aria-hidden="true"></i>
+        <span><small>02</small>In-context examples</span>
+      </a>
+    </div>
+
+    <div class="section-rail-group">
+      <p>Evaluation</p>
+      <a href="#results-overview" data-section-nav="results-overview">
+        <i class="section-rail-dot" aria-hidden="true"></i>
+        <span><small>03</small>Result highlights</span>
+      </a>
+      <a href="#rollout-explorer" data-section-nav="rollout-explorer">
+        <i class="section-rail-dot" aria-hidden="true"></i>
+        <span><small>04</small>Real-world</span>
+      </a>
+      <a href="#rmbench-results" data-section-nav="rmbench-results">
+        <i class="section-rail-dot" aria-hidden="true"></i>
+        <span><small>05</small>RMBench</span>
+      </a>
+      <a href="#robocasa-results" data-section-nav="robocasa-results">
+        <i class="section-rail-dot" aria-hidden="true"></i>
+        <span><small>06</small>RoboCasa</span>
+      </a>
+      <a href="#inference-efficiency" data-section-nav="inference-efficiency">
+        <i class="section-rail-dot" aria-hidden="true"></i>
+        <span><small>07</small>Efficiency</span>
+      </a>
+    </div>
+
+    <div class="section-rail-group">
+      <p>Analysis</p>
+      <a href="#memory-encoding" data-section-nav="memory-encoding">
+        <i class="section-rail-dot" aria-hidden="true"></i>
+        <span><small>08</small>Memory encoding</span>
+      </a>
+      <a href="#memory-analysis" data-section-nav="memory-analysis">
+        <i class="section-rail-dot" aria-hidden="true"></i>
+        <span><small>09</small>Attention analysis</span>
+      </a>
+      <a href="#memory-learning" data-section-nav="memory-learning">
+        <i class="section-rail-dot" aria-hidden="true"></i>
+        <span><small>10</small>Learning &amp; VLA</span>
+      </a>
+    </div>
+  </div>
+  <p class="section-rail-hint">Scroll or choose a section</p>
+</nav>
+
+<section class="hero" id="overview">
   <video
     id="hero-rollout-grid"
     class="hero-rollout-grid"
@@ -73,28 +166,943 @@
   <div class="container-wide">
     <p class="section-kicker">Approach</p>
     <h2>Method</h2>
-    <p class="section-subtitle">
-      IMPRINT compresses visual, action, and proprioceptive history into a fixed-size
-      latent memory, bootstraps that memory with reconstruction and task-progress
-      supervision, and then jointly adapts it with a VLA for control.
+    <p class="section-subtitle method-section-subtitle">
+      <span>Trace how visual, action, and state histories become compact latent memory.</span>
+      <span>Interact with each component to inspect its exact RMBench ablation.</span>
     </p>
 
-    <figure class="method-overview">
-      <div class="method-image-scroll">
-        <img
-          src="static/images/method-overview.png"
-          alt="Overview of multi-stream history tokenization, memory bootstrapping, and joint adaptation with a vision-language-action model"
-          loading="lazy"
-          decoding="async"
-        >
+    <div class="method-explorer method-explorer-v5 method-explorer-v6" id="method-explorer" data-stage="memory">
+      <div class="method-explorer-toolbar">
+        <div class="method-stage-tabs" role="tablist" aria-label="Select an IMPRINT training stage">
+          <button
+            class="method-stage-tab is-active"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            data-method-stage="memory"
+          >
+            <span class="method-stage-index">01</span>
+            <span class="method-stage-copy">
+              <strong>Learn the memory</strong>
+              <small>Retain history and task progress</small>
+            </span>
+          </button>
+          <button
+            class="method-stage-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            data-method-stage="policy"
+          >
+            <span class="method-stage-index">02</span>
+            <span class="method-stage-copy">
+              <strong>Adapt the policy</strong>
+              <small>Inject memory inside the action expert</small>
+            </span>
+          </button>
+        </div>
+        <p class="method-explorer-status" id="method-explorer-status" aria-live="polite">
+          Visual, action, and state history from timestep 0 through t is compressed into latent memory.
+        </p>
       </div>
-      <figcaption>
-        Visual history is tokenized alongside executed actions and proprioceptive states.
-        A memory encoder compresses these streams into latent tokens; Stage 1 reconstructs
-        sampled history and estimates task progress, while Stage 2 jointly adapts the memory
-        and VLA for action generation.
-      </figcaption>
-    </figure>
+
+      <div class="method-history-timeline method-history-timeline-top">
+        <div class="method-history-timeline-heading">
+          <label for="method-history-slider">Episode timestep</label>
+          <output id="method-history-time">t = 00:34 / 01:08</output>
+        </div>
+        <input
+          id="method-history-slider"
+          type="range"
+          min="0"
+          max="100"
+          step="0.1"
+          value="50"
+          aria-describedby="method-history-legend"
+        >
+        <div class="method-history-legend" id="method-history-legend">
+          <span><i></i>Encoded: 0 → t</span>
+          <span><i></i>Future: t → T</span>
+        </div>
+      </div>
+
+      <section class="method-pipeline-panel" aria-labelledby="method-pipeline-title">
+        <h3 class="sr-only" id="method-pipeline-title">Interactive IMPRINT method</h3>
+
+        <div class="method-pipeline-scroll" tabindex="0">
+          <div class="method-storyboard">
+            <section class="method-history-bank" aria-labelledby="method-history-title">
+              <div class="method-column-heading">
+                <span>Input</span>
+                <div>
+                  <small>Dust Table example</small>
+                  <h4 id="method-history-title">Multi-stream history</h4>
+                </div>
+              </div>
+
+              <button
+                class="method-stream-card method-stream-card-visual"
+                type="button"
+                data-method-stream="visual"
+                aria-pressed="true"
+              >
+                <span class="method-stream-card-heading">
+                  <span>
+                    <strong>
+                      Visual history
+                      <b class="method-stream-range">o<sub>0:t−1</sub></b>
+                    </strong>
+                  </span>
+                  <span class="method-stream-state">On</span>
+                </span>
+                <span class="method-visual-history-preview" aria-label="Initial Dust Table observation and the two observations immediately preceding the selected timestep">
+                  <span class="method-visual-history-slot" data-method-visual-slot="0">
+                    <img
+                      src="static/images/method-dust/history-sequence/frame-001.jpg"
+                      alt="Initial Dust Table head-camera observation"
+                    >
+                    <i>o<sub>0</sub></i>
+                  </span>
+                  <span class="method-visual-history-slot" data-method-visual-slot="1">
+                    <img
+                      src="static/images/method-dust/history-sequence/frame-033.jpg"
+                      alt="Dust Table head-camera observation two steps before the selected timestep"
+                    >
+                    <i>o<sub>t−2</sub></i>
+                  </span>
+                  <span class="method-visual-history-slot" data-method-visual-slot="2">
+                    <img
+                      src="static/images/method-dust/history-sequence/frame-034.jpg"
+                      alt="Dust Table head-camera observation one step before the selected timestep"
+                    >
+                    <i>o<sub>t−1</sub></i>
+                  </span>
+                </span>
+              </button>
+
+              <button
+                class="method-stream-card method-stream-card-action"
+                type="button"
+                data-method-stream="action"
+                aria-pressed="true"
+              >
+                <span class="method-stream-card-heading">
+                  <span class="method-stream-title-with-icon">
+                    <img src="static/images/method-icons/action-history.png" alt="">
+                    <span>
+                      <strong>Action history</strong>
+                      <small>Executed vectors · <b>a<sub>0:t−1</sub></b></small>
+                    </span>
+                  </span>
+                  <span class="method-stream-state">On</span>
+                </span>
+                <span class="method-raw-vector-sequence method-action-vectors" aria-label="Action history from timestep zero through the last executed action">
+                  <span data-method-history-point="0">
+                    <b>a<sub>0</sub></b>
+                    <i><em></em><em></em><em></em><em></em></i>
+                  </span>
+                  <span data-method-history-point="25">
+                    <b>a<sub>¼T</sub></b>
+                    <i><em></em><em></em><em></em><em></em></i>
+                  </span>
+                  <span data-method-history-point="50">
+                    <b>a<sub>½T</sub></b>
+                    <i><em></em><em></em><em></em><em></em></i>
+                  </span>
+                  <span data-method-history-point="75">
+                    <b>a<sub>¾T</sub></b>
+                    <i><em></em><em></em><em></em><em></em></i>
+                  </span>
+                  <span data-method-history-point="100">
+                    <b>a<sub>T−1</sub></b>
+                    <i><em></em><em></em><em></em><em></em></i>
+                  </span>
+                </span>
+              </button>
+
+              <button
+                class="method-stream-card method-stream-card-state"
+                type="button"
+                data-method-stream="state"
+                aria-pressed="true"
+              >
+                <span class="method-stream-card-heading">
+                  <span class="method-stream-title-with-icon">
+                    <img src="static/images/method-icons/state-history.png" alt="">
+                    <span>
+                      <strong>Robot-state history</strong>
+                      <small>Proprioceptive vectors · <b>s<sub>0:t</sub></b></small>
+                    </span>
+                  </span>
+                  <span class="method-stream-state">On</span>
+                </span>
+                <span class="method-raw-vector-sequence method-state-vectors" aria-label="Robot state history from timestep zero through the current state">
+                  <span data-method-history-point="0">
+                    <b>s<sub>0</sub></b>
+                    <i><em></em><em></em><em></em><em></em></i>
+                  </span>
+                  <span data-method-history-point="25">
+                    <b>s<sub>¼T</sub></b>
+                    <i><em></em><em></em><em></em><em></em></i>
+                  </span>
+                  <span data-method-history-point="50">
+                    <b>s<sub>½T</sub></b>
+                    <i><em></em><em></em><em></em><em></em></i>
+                  </span>
+                  <span data-method-history-point="75">
+                    <b>s<sub>¾T</sub></b>
+                    <i><em></em><em></em><em></em><em></em></i>
+                  </span>
+                  <span data-method-history-point="100">
+                    <b>s<sub>T</sub></b>
+                    <i><em></em><em></em><em></em><em></em></i>
+                  </span>
+                </span>
+              </button>
+
+            </section>
+
+            <div class="method-flow-bundle" aria-hidden="true">
+              <div class="method-flow-track method-flow-track-visual" data-method-flow="visual">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="method-flow-track method-flow-track-action" data-method-flow="action">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="method-flow-track method-flow-track-state" data-method-flow="state">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+
+            <div class="method-memory-node">
+              <div class="method-memory-capacity-control">
+                <span>Bottleneck size <b>B</b></span>
+                <div role="group" aria-label="Select latent memory bottleneck capacity">
+                  <button type="button" data-attention-capacity="1" aria-pressed="false">1</button>
+                  <button type="button" data-attention-capacity="4" aria-pressed="false">4</button>
+                  <button type="button" data-attention-capacity="16" aria-pressed="false">16</button>
+                  <button type="button" data-attention-capacity="64" aria-pressed="false">64</button>
+                  <button class="is-active" type="button" data-attention-capacity="256" aria-pressed="true" title="Paper default">256</button>
+                  <button type="button" data-attention-capacity="1024" aria-pressed="false">1024</button>
+                </div>
+              </div>
+              <span class="method-memory-kicker">Policy-agnostic</span>
+              <h4>Memory encoder</h4>
+              <div class="method-memory-compression" aria-hidden="true">
+                <span class="method-compression-stream method-compression-visual"></span>
+                <span class="method-compression-stream method-compression-action"></span>
+                <span class="method-compression-stream method-compression-state"></span>
+                <span class="method-compression-arrow">›</span>
+                <div class="method-memory-token-grid">
+                  <span data-memory-stream="visual" data-capacity-token></span>
+                  <span data-memory-stream="action" data-capacity-token></span>
+                  <span data-memory-stream="state" data-capacity-token></span>
+                  <span data-memory-stream="visual" data-capacity-token></span>
+                  <span data-memory-stream="action" data-capacity-token></span>
+                  <span data-memory-stream="state" data-capacity-token></span>
+                  <span data-memory-stream="visual" data-capacity-token></span>
+                  <span data-memory-stream="action" data-capacity-token></span>
+                  <span data-memory-stream="state" data-capacity-token></span>
+                  <span data-memory-stream="visual" data-capacity-token></span>
+                  <span data-memory-stream="action" data-capacity-token></span>
+                  <span data-memory-stream="state" data-capacity-token></span>
+                  <span data-memory-stream="visual" data-capacity-token></span>
+                  <span data-memory-stream="action" data-capacity-token></span>
+                  <span data-memory-stream="state" data-capacity-token></span>
+                  <span data-memory-stream="visual" data-capacity-token></span>
+                  <span data-memory-stream="action" data-capacity-token></span>
+                  <span data-memory-stream="state" data-capacity-token></span>
+                  <span class="is-capacity-hidden" data-memory-stream="visual" data-capacity-token></span>
+                  <span class="is-capacity-hidden" data-memory-stream="action" data-capacity-token></span>
+                  <span class="is-capacity-hidden" data-memory-stream="state" data-capacity-token></span>
+                  <span class="is-capacity-hidden" data-memory-stream="visual" data-capacity-token></span>
+                  <span class="is-capacity-hidden" data-memory-stream="action" data-capacity-token></span>
+                  <span class="is-capacity-hidden" data-memory-stream="state" data-capacity-token></span>
+                </div>
+              </div>
+              <strong class="method-memory-caption">Latent history encoded from 0 → t (50%)</strong>
+              <small class="method-memory-capacity-caption" id="method-memory-capacity-caption">
+                Schematic token view · B = 256
+              </small>
+            </div>
+
+            <div class="method-output-track" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+
+            <div class="method-stage-output">
+              <div class="method-stage-content method-stage-content-memory" data-method-content="memory">
+                <div class="method-column-heading">
+                  <span>Learn</span>
+                  <div>
+                    <small>Memory objectives</small>
+                    <h4>Teach memory what to retain</h4>
+                  </div>
+                </div>
+                <div class="method-learning-diagram">
+                  <div class="method-decoder-hub">
+                    <span class="method-decoder-mark" aria-hidden="true"></span>
+                    <strong>Memory decoder</strong>
+                    <small>Sample and reconstruct the episode</small>
+                  </div>
+                  <div class="method-objective-grid">
+                    <button
+                      class="method-objective-card"
+                      type="button"
+                      data-method-objective="visual"
+                      aria-pressed="true"
+                    >
+                      <img class="method-supervision-icon" src="static/images/method-icons/visual-features.svg" alt="">
+                      <span><strong>Visual reconstruction</strong><small>DINO features</small></span>
+                      <span class="method-objective-state">On</span>
+                    </button>
+                    <button
+                      class="method-objective-card"
+                      type="button"
+                      data-method-objective="action"
+                      aria-pressed="true"
+                    >
+                      <img class="method-supervision-icon" src="static/images/method-icons/action-history.png" alt="">
+                      <span><strong>Action reconstruction</strong><small>Executed actions</small></span>
+                      <span class="method-objective-state">On</span>
+                    </button>
+                    <button
+                      class="method-objective-card"
+                      type="button"
+                      data-method-objective="state"
+                      aria-pressed="true"
+                    >
+                      <img class="method-supervision-icon" src="static/images/method-icons/state-history.png" alt="">
+                      <span><strong>State reconstruction</strong><small>Robot states</small></span>
+                      <span class="method-objective-state">On</span>
+                    </button>
+                    <button
+                      class="method-objective-card method-objective-card-progress"
+                      type="button"
+                      data-method-objective="progress"
+                      aria-pressed="true"
+                    >
+                      <img class="method-supervision-icon" src="static/images/method-icons/progress-estimation.png?v=20261010-mauve" alt="">
+                      <span>
+                        <strong>Progress estimation</strong>
+                        <small>Episode progress · <b id="method-progress-value">50%</b></small>
+                      </span>
+                      <span class="method-objective-state">On</span>
+                      <span class="method-progress-bar" aria-hidden="true">
+                        <span id="method-progress-bar"></span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="method-stage-content method-stage-content-policy" data-method-content="policy" hidden>
+                <div class="method-column-heading">
+                  <span>Adapt</span>
+                  <div>
+                    <small>Joint adaptation</small>
+                    <h4>Read memory inside the action expert</h4>
+                  </div>
+                </div>
+
+                <div class="method-policy-architecture method-policy-architecture-v10">
+                  <div class="method-policy-context-row">
+                    <figure class="method-policy-observation">
+                      <img
+                        id="method-policy-observation"
+                        src="static/images/method-dust/dust-history-03.jpg"
+                        alt="Current head-camera observation from the Dust Table rollout"
+                      >
+                      <figcaption>
+                        <span>Current observation</span>
+                      </figcaption>
+                    </figure>
+                    <div class="method-instruction-stack">
+                      <span>Task instruction</span>
+                      <strong>Move the objects away to dust the table and put them back in the original positions.</strong>
+                    </div>
+                  </div>
+
+                  <div class="method-context-arrows" aria-hidden="true">
+                    <span>↓</span>
+                    <span>↓</span>
+                  </div>
+
+                  <div class="method-vlm-node">
+                    <div>
+                      <span>Native observation + language pathway</span>
+                      <strong>Vision-language model</strong>
+                    </div>
+                    <small><b>Frozen</b> image encoder <i>·</i> <b>Trainable</b> VLM transformer</small>
+                  </div>
+
+                  <div class="method-vlm-kv-link" aria-hidden="true">
+                    <span>VLM / state key–values</span>
+                    <i>↓</i>
+                  </div>
+
+                  <div class="method-expert-diagram">
+                    <div class="method-memory-source">
+                      <span>Memory tokens</span>
+                      <div class="method-policy-memory-tokens" aria-hidden="true">
+                        <i class="is-visual" data-policy-memory-stream="visual"></i>
+                        <i class="is-action" data-policy-memory-stream="action"></i>
+                        <i class="is-state" data-policy-memory-stream="state"></i>
+                        <i class="is-visual" data-policy-memory-stream="visual"></i>
+                        <i class="is-action" data-policy-memory-stream="action"></i>
+                        <i class="is-state" data-policy-memory-stream="state"></i>
+                      </div>
+                      <strong id="method-policy-memory-label">Visual · Action · State</strong>
+                      <small>Fixed-size</small>
+                    </div>
+
+                    <div class="method-expert-stack">
+                      <div class="method-expert-stack-heading">
+                        <strong>Flow-matching action expert</strong>
+                        <span>Lightweight memory adapter at each layer</span>
+                      </div>
+                      <div class="method-expert-stack-layers">
+                        <div class="method-expert-stack-layer">
+                          <span class="method-cross-attn">
+                            <small>Action queries · Memory K/V</small>
+                            <strong>Cross-attention</strong>
+                          </span>
+                          <span class="method-film-block">
+                            <small>Feature modulation</small>
+                            <strong>FiLM <b>γ, β</b></strong>
+                          </span>
+                          <span class="method-native-action-layer">
+                            <small>Native block</small>
+                            <strong>Layer <b>L</b></strong>
+                          </span>
+                        </div>
+                        <div class="method-expert-stack-layer method-expert-stack-middle" aria-hidden="true">
+                          <span>•••</span><span>•••</span><span>•••</span>
+                        </div>
+                        <div class="method-expert-stack-layer">
+                          <span class="method-cross-attn">
+                            <small>Action queries · Memory K/V</small>
+                            <strong>Cross-attention</strong>
+                          </span>
+                          <span class="method-film-block">
+                            <small>Feature modulation</small>
+                            <strong>FiLM <b>γ, β</b></strong>
+                          </span>
+                          <span class="method-native-action-layer">
+                            <small>Native block</small>
+                            <strong>Layer <b>1</b></strong>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="method-next-action" aria-label="Predicted action chunk beginning at time t">
+                      <span aria-hidden="true">→</span>
+                      <div class="method-action-symbol-output method-action-symbol-plain">
+                        <strong id="method-policy-action-label">a<sub>t:t+h</sub></strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p class="method-expert-order method-expert-order-v10">
+                    Native attention → <strong>memory cross-attention + FiLM</strong> → feedforward
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="method-evidence" aria-labelledby="method-evidence-title">
+        <div class="method-evidence-body" id="method-evidence-body" aria-live="polite">
+          <div class="method-evidence-summary">
+            <p class="eyebrow" id="method-evidence-title">RMBench ablation</p>
+            <span class="method-evidence-chip" id="method-evidence-chip">Exact appendix row</span>
+            <h3 id="method-evidence-label">All objectives (IMPRINT)</h3>
+            <div class="method-evidence-score-row">
+              <strong id="method-evidence-score">72.7%</strong>
+              <span id="method-evidence-delta">Best reported configuration</span>
+            </div>
+            <p id="method-evidence-note">
+              Per-task success from the matching appendix row.
+            </p>
+            <div class="method-recipe-options" id="method-recipe-options" hidden>
+              <button type="button" data-method-recipe="e2e" aria-pressed="false">E2E</button>
+              <button type="button" data-method-recipe="frozen" aria-pressed="false">Memory frozen</button>
+              <button class="is-active" type="button" data-method-recipe="joint" aria-pressed="true">Joint adaptation</button>
+            </div>
+          </div>
+          <div class="method-task-chart" id="method-task-chart" aria-label="Per-task RMBench success rates"></div>
+        </div>
+      </section>
+    </div>
+
+    <details class="method-paper-details">
+      <summary>
+        <span>View the paper method figure</span>
+        <span aria-hidden="true">+</span>
+      </summary>
+      <figure class="method-overview">
+        <div class="method-image-scroll">
+          <img
+            src="static/images/method-overview.png"
+            alt="Overview of multi-stream history tokenization, memory learning, and joint adaptation with a vision-language-action model"
+            loading="lazy"
+            decoding="async"
+          >
+        </div>
+        <figcaption>
+          Visual history is tokenized alongside executed actions and proprioceptive states.
+          A memory encoder compresses these streams into latent tokens; Stage 1 reconstructs
+          sampled history and estimates task progress, while Stage 2 jointly adapts the memory
+          and VLA for action generation.
+        </figcaption>
+      </figure>
+    </details>
+  </div>
+</section>
+
+<section class="section method-example-section" id="method-example" aria-labelledby="method-example-title">
+  <div class="container-wide">
+    <div class="method-example-showcase">
+      <div class="method-example-heading">
+        <p class="section-kicker">Interactive Example</p>
+        <h3 id="method-example-title">Choose an in-context folding example</h3>
+        <p>
+          Compare all four demonstrated styles across four towel colors. Each cell shows
+          only the external-camera stream; select one color × style combination to compare
+          its IMPRINT execution with a matched OOD execution. Successes and failures are
+          labeled explicitly.
+        </p>
+      </div>
+
+      <div class="method-style-matrix" aria-label="Four by four grid of external-view cloth-folding demonstrations">
+        <div class="method-style-column-head" aria-hidden="true">
+          <span>Demonstration</span>
+          <strong>Style 1</strong>
+          <strong>Style 2</strong>
+          <strong>Style 3</strong>
+          <strong>Style 4</strong>
+        </div>
+
+        <div class="method-style-row" data-method-demo-color="Orange">
+          <div class="method-style-color">
+            <i class="is-orange"></i>
+            <span>Orange</span>
+          </div>
+          <figure data-method-demo-style="1">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/orange/style-1.jpg" data-src="static/videos/in-context/external/orange/style-1.mp4?v=20261010-external-only" aria-label="Orange towel, Style 1 demonstration, external view"></video>
+            <figcaption class="sr-only">Orange towel, Style 1</figcaption>
+          </figure>
+          <figure data-method-demo-style="2">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/orange/style-2.jpg" data-src="static/videos/in-context/external/orange/style-2.mp4?v=20261010-external-only" aria-label="Orange towel, Style 2 demonstration, external view"></video>
+            <figcaption class="sr-only">Orange towel, Style 2</figcaption>
+          </figure>
+          <figure data-method-demo-style="3">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/orange/style-3.jpg" data-src="static/videos/in-context/external/orange/style-3.mp4?v=20261010-external-only" aria-label="Orange towel, Style 3 demonstration, external view"></video>
+            <figcaption class="sr-only">Orange towel, Style 3</figcaption>
+          </figure>
+          <figure data-method-demo-style="4">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/orange/style-4.jpg" data-src="static/videos/in-context/external/orange/style-4.mp4?v=20261010-external-only" aria-label="Orange towel, Style 4 demonstration, external view"></video>
+            <figcaption class="sr-only">Orange towel, Style 4</figcaption>
+          </figure>
+        </div>
+
+        <div class="method-style-row" data-method-demo-color="Dark blue">
+          <div class="method-style-color">
+            <i class="is-dark-blue"></i>
+            <span>Dark blue</span>
+          </div>
+          <figure data-method-demo-style="1">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/dark-blue/style-1.jpg" data-src="static/videos/in-context/external/dark-blue/style-1.mp4?v=20261010-external-only" aria-label="Dark-blue towel, Style 1 demonstration, external view"></video>
+            <figcaption class="sr-only">Dark-blue towel, Style 1</figcaption>
+          </figure>
+          <figure data-method-demo-style="2">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/dark-blue/style-2.jpg" data-src="static/videos/in-context/external/dark-blue/style-2.mp4?v=20261010-external-only" aria-label="Dark-blue towel, Style 2 demonstration, external view"></video>
+            <figcaption class="sr-only">Dark-blue towel, Style 2</figcaption>
+          </figure>
+          <figure data-method-demo-style="3">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/dark-blue/style-3.jpg" data-src="static/videos/in-context/external/dark-blue/style-3.mp4?v=20261010-external-only" aria-label="Dark-blue towel, Style 3 demonstration, external view"></video>
+            <figcaption class="sr-only">Dark-blue towel, Style 3</figcaption>
+          </figure>
+          <figure data-method-demo-style="4">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/dark-blue/style-4.jpg" data-src="static/videos/in-context/external/dark-blue/style-4.mp4?v=20261010-external-only" aria-label="Dark-blue towel, Style 4 demonstration, external view"></video>
+            <figcaption class="sr-only">Dark-blue towel, Style 4</figcaption>
+          </figure>
+        </div>
+
+        <div class="method-style-row" data-method-demo-color="Blue">
+          <div class="method-style-color">
+            <i class="is-blue"></i>
+            <span>Blue</span>
+          </div>
+          <figure data-method-demo-style="1">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/blue/style-1.jpg" data-src="static/videos/in-context/external/blue/style-1.mp4?v=20261010-external-only" aria-label="Blue towel, Style 1 demonstration, external view"></video>
+            <figcaption class="sr-only">Blue towel, Style 1</figcaption>
+          </figure>
+          <figure data-method-demo-style="2">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/blue/style-2.jpg" data-src="static/videos/in-context/external/blue/style-2.mp4?v=20261010-external-only" aria-label="Blue towel, Style 2 demonstration, external view"></video>
+            <figcaption class="sr-only">Blue towel, Style 2</figcaption>
+          </figure>
+          <figure data-method-demo-style="3">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/blue/style-3.jpg" data-src="static/videos/in-context/external/blue/style-3.mp4?v=20261010-external-only" aria-label="Blue towel, Style 3 demonstration, external view"></video>
+            <figcaption class="sr-only">Blue towel, Style 3</figcaption>
+          </figure>
+          <figure data-method-demo-style="4">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/blue/style-4.jpg" data-src="static/videos/in-context/external/blue/style-4.mp4?v=20261010-external-only" aria-label="Blue towel, Style 4 demonstration, external view"></video>
+            <figcaption class="sr-only">Blue towel, Style 4</figcaption>
+          </figure>
+        </div>
+
+        <div class="method-style-row" data-method-demo-color="Pink">
+          <div class="method-style-color">
+            <i class="is-pink"></i>
+            <span>Pink</span>
+          </div>
+          <figure data-method-demo-style="1">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/pink/style-1.jpg" data-src="static/videos/in-context/external/pink/style-1.mp4?v=20261010-external-only" aria-label="Pink towel, Style 1 demonstration, external view"></video>
+            <figcaption class="sr-only">Pink towel, Style 1</figcaption>
+          </figure>
+          <figure data-method-demo-style="2">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/pink/style-2.jpg" data-src="static/videos/in-context/external/pink/style-2.mp4?v=20261010-external-only" aria-label="Pink towel, Style 2 demonstration, external view"></video>
+            <figcaption class="sr-only">Pink towel, Style 2</figcaption>
+          </figure>
+          <figure data-method-demo-style="3">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/pink/style-3.jpg" data-src="static/videos/in-context/external/pink/style-3.mp4?v=20261010-external-only" aria-label="Pink towel, Style 3 demonstration, external view"></video>
+            <figcaption class="sr-only">Pink towel, Style 3</figcaption>
+          </figure>
+          <figure data-method-demo-style="4">
+            <video class="method-style-demo-video" muted loop playsinline preload="none" poster="static/images/in-context-external/pink/style-4.jpg" data-src="static/videos/in-context/external/pink/style-4.mp4?v=20261010-external-only" aria-label="Pink towel, Style 4 demonstration, external view"></video>
+            <figcaption class="sr-only">Pink towel, Style 4</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="method-style-picker">
+        <div>
+          <p class="eyebrow">Selected demonstration</p>
+          <h3 id="method-style-rollout-title">Orange towel · Style 1 executions</h3>
+          <p id="method-style-rollout-summary">
+            The selected IMPRINT and matched OOD executions use the same demonstration;
+            badges mark each outcome.
+          </p>
+        </div>
+      </div>
+
+      <div class="method-style-rollout-grid" id="method-style-rollout-grid" aria-live="polite"></div>
+    </div>
+
+    <div class="attention-explorer" data-attention-active="ours">
+      <div class="attention-explorer-header">
+        <div class="attention-explorer-copy">
+          <p class="eyebrow">Interactive attention trace</p>
+          <h3>How memory attends over time</h3>
+          <p>
+            Compare one Cover Blocks episode across E2E, Frozen, and Ours.
+          </p>
+        </div>
+        <div class="attention-selected-card" aria-live="polite">
+          <span>Selected recipe</span>
+          <div>
+            <strong id="attention-selected-method">Ours</strong>
+            <b id="attention-selected-score">100%</b>
+          </div>
+          <small id="attention-selected-description">
+            Joint memory-policy adaptation · task success
+          </small>
+        </div>
+      </div>
+
+      <div class="attention-methods" role="tablist" aria-label="Memory training method">
+        <button type="button" role="tab" aria-selected="false" data-attention-method="e2e">
+          <span class="attention-method-swatch" aria-hidden="true"></span>
+          <span class="attention-method-copy">
+            <strong>E2E</strong>
+            <small>Memory + policy from scratch</small>
+          </span>
+          <span class="attention-method-result"><b>15%</b><small>success</small></span>
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-attention-method="frozen">
+          <span class="attention-method-swatch" aria-hidden="true"></span>
+          <span class="attention-method-copy">
+            <strong>Frozen</strong>
+            <small>Pretrained memory kept fixed</small>
+          </span>
+          <span class="attention-method-result"><b>35%</b><small>success</small></span>
+        </button>
+        <button class="is-active" type="button" role="tab" aria-selected="true" data-attention-method="ours">
+          <span class="attention-method-swatch" aria-hidden="true"></span>
+          <span class="attention-method-copy">
+            <strong>Ours</strong>
+            <small>Joint memory-policy adaptation</small>
+          </span>
+          <span class="attention-method-result"><b>100%</b><small>success</small></span>
+        </button>
+      </div>
+
+      <figure class="attention-stage">
+        <div class="attention-stage-bar">
+          <div>
+            <span class="attention-live-dot" aria-hidden="true"></span>
+            <strong>Cover Blocks</strong>
+            <small>memory attention</small>
+          </div>
+          <span id="attention-progress-label">0% through episode</span>
+        </div>
+        <div class="attention-stage-viewport">
+          <div
+            class="attention-visualization"
+            id="attention-visualization"
+          >
+            <section class="attention-detail-section attention-current-section">
+              <div class="attention-detail-heading">
+                <div>
+                  <span>Policy input</span>
+                  <strong>Current observations</strong>
+                </div>
+                <small id="attention-action-step">Action step 0</small>
+              </div>
+              <div class="attention-current-grid">
+                <figure class="attention-observation-card">
+                  <figcaption>
+                    <span>Current observation</span>
+                    <strong>Head camera</strong>
+                  </figcaption>
+                  <div
+                    class="attention-scene-crop is-current-head"
+                    role="img"
+                    aria-label="Current head-camera observation"
+                  ></div>
+                </figure>
+                <figure class="attention-observation-card">
+                  <figcaption>
+                    <span>Current observation</span>
+                    <strong>Left wrist camera</strong>
+                  </figcaption>
+                  <div
+                    class="attention-scene-crop is-current-left"
+                    role="img"
+                    aria-label="Current left wrist-camera observation"
+                  ></div>
+                </figure>
+                <figure class="attention-observation-card">
+                  <figcaption>
+                    <span>Current observation</span>
+                    <strong>Right wrist camera</strong>
+                  </figcaption>
+                  <div
+                    class="attention-scene-crop is-current-right"
+                    role="img"
+                    aria-label="Current right wrist-camera observation"
+                  ></div>
+                </figure>
+              </div>
+            </section>
+
+            <section class="attention-detail-section attention-recall-section">
+              <div class="attention-detail-heading">
+                <div>
+                  <span>Memory read</span>
+                  <strong>Highest-attention history</strong>
+                </div>
+                <small>One retrieved moment per stream · bars normalized within this step</small>
+              </div>
+              <div class="attention-recall-grid">
+                <article class="attention-recall-card" data-attention-stream="head">
+                  <div class="attention-recall-card-heading">
+                    <h5>Head camera</h5>
+                    <b id="attention-weight-head">w = 0.3712</b>
+                  </div>
+                  <div
+                    class="attention-scene-crop is-recall-head"
+                    role="img"
+                    aria-label="Highest-attention frame from the head-camera history"
+                  ></div>
+                  <footer>
+                    <span id="attention-history-step-head">History step 0</span>
+                    <i class="attention-weight-track"><span id="attention-weight-bar-head"></span></i>
+                  </footer>
+                </article>
+                <article class="attention-recall-card" data-attention-stream="left">
+                  <div class="attention-recall-card-heading">
+                    <h5>Left wrist</h5>
+                    <b id="attention-weight-left">w = 0.1880</b>
+                  </div>
+                  <div
+                    class="attention-scene-crop is-recall-left"
+                    role="img"
+                    aria-label="Highest-attention frame from the left wrist-camera history"
+                  ></div>
+                  <footer>
+                    <span id="attention-history-step-left">History step 0</span>
+                    <i class="attention-weight-track"><span id="attention-weight-bar-left"></span></i>
+                  </footer>
+                </article>
+                <article class="attention-recall-card" data-attention-stream="right">
+                  <div class="attention-recall-card-heading">
+                    <h5>Right wrist</h5>
+                    <b id="attention-weight-right">w = 0.1015</b>
+                  </div>
+                  <div
+                    class="attention-scene-crop is-recall-right"
+                    role="img"
+                    aria-label="Highest-attention frame from the right wrist-camera history"
+                  ></div>
+                  <footer>
+                    <span id="attention-history-step-right">History step 0</span>
+                    <i class="attention-weight-track"><span id="attention-weight-bar-right"></span></i>
+                  </footer>
+                </article>
+                <article class="attention-recall-card" data-attention-stream="action">
+                  <div class="attention-recall-card-heading">
+                    <h5>Action history</h5>
+                    <b id="attention-weight-action">w = 0.1708</b>
+                  </div>
+                  <div
+                    class="attention-scene-crop is-recall-action"
+                    role="img"
+                    aria-label="Head-camera frame aligned with the highest-attention action-history timestep"
+                  ></div>
+                  <footer>
+                    <span id="attention-history-step-action">History step 0</span>
+                    <i class="attention-weight-track"><span id="attention-weight-bar-action"></span></i>
+                  </footer>
+                </article>
+                <article class="attention-recall-card" data-attention-stream="state">
+                  <div class="attention-recall-card-heading">
+                    <h5>State history</h5>
+                    <b id="attention-weight-state">w = 0.1685</b>
+                  </div>
+                  <div
+                    class="attention-scene-crop is-recall-state"
+                    role="img"
+                    aria-label="Head-camera frame aligned with the highest-attention robot-state timestep"
+                  ></div>
+                  <footer>
+                    <span id="attention-history-step-state">History step 0</span>
+                    <i class="attention-weight-track"><span id="attention-weight-bar-state"></span></i>
+                  </footer>
+                </article>
+              </div>
+            </section>
+
+            <section class="attention-detail-section attention-heatmap-section">
+              <div class="attention-detail-heading">
+                <div>
+                  <span>Temporal trace</span>
+                  <strong>Attention over episode history</strong>
+                </div>
+                <small>Brighter color means greater attention</small>
+              </div>
+              <div class="attention-heatmap-scroll">
+                <div class="attention-heatmap-grid">
+                  <div class="attention-heatmap-labels" aria-hidden="true">
+                    <span data-attention-stream="head">Head camera</span>
+                    <span data-attention-stream="left">Left wrist camera</span>
+                    <span data-attention-stream="right">Right wrist camera</span>
+                    <span data-attention-stream="action">Action history</span>
+                    <span data-attention-stream="state">Robot state</span>
+                  </div>
+                  <div class="attention-heatmap-plot">
+                    <img
+                      id="attention-heatmap"
+                      src="static/images/attention-detail/ours/frame-00-heatmap.png"
+                      alt="Attention over head-camera, wrist-camera, action-history, and robot-state streams"
+                      loading="lazy"
+                      decoding="async"
+                    >
+                    <span class="attention-map-marker" data-attention-marker="head"></span>
+                    <span class="attention-map-marker" data-attention-marker="left"></span>
+                    <span class="attention-map-marker" data-attention-marker="right"></span>
+                    <span class="attention-map-marker" data-attention-marker="action"></span>
+                    <span class="attention-map-marker" data-attention-marker="state"></span>
+                  </div>
+                </div>
+                <div class="attention-heatmap-axis">
+                  <span>Episode step 0</span>
+                  <span id="attention-history-end">Episode step 0</span>
+                </div>
+              </div>
+
+              <div class="attention-source-summary">
+                <div class="attention-source-summary-heading">
+                  <div>
+                    <span>Encoder attention</span>
+                    <strong>Memory queries read from</strong>
+                    <small>Share of cross-attention assigned to each input token stream</small>
+                  </div>
+                  <div class="attention-memory-output">
+                    <span class="attention-memory-token-stack" aria-hidden="true">
+                      <i></i><i></i><i></i>
+                    </span>
+                    <span>
+                      <small>Encoder output</small>
+                      <strong>256 latent memory tokens</strong>
+                    </span>
+                  </div>
+                </div>
+                <div class="attention-mass-grid" aria-label="Memory encoder attention by input token stream">
+                  <div data-attention-mass="latent">
+                    <span><strong>Historical video</strong><output id="attention-mass-latent">0.0%</output></span>
+                    <small>Compressed completed chunks</small>
+                    <i><span id="attention-mass-bar-latent"></span></i>
+                  </div>
+                  <div data-attention-mass="recent">
+                    <span><strong>Recent images</strong><output id="attention-mass-recent">66.1%</output></span>
+                    <small>DINOv3 tokens from recent frames</small>
+                    <i><span id="attention-mass-bar-recent"></span></i>
+                  </div>
+                  <div data-attention-mass="action">
+                    <span><strong>Executed actions</strong><output id="attention-mass-action">17.1%</output></span>
+                    <small>Action tokens through the current step</small>
+                    <i><span id="attention-mass-bar-action"></span></i>
+                  </div>
+                  <div data-attention-mass="state">
+                    <span><strong>Proprioceptive states</strong><output id="attention-mass-state">16.8%</output></span>
+                    <small>Robot-state tokens through the current step</small>
+                    <i><span id="attention-mass-bar-state"></span></i>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+        <figcaption>
+          <span id="attention-frame-caption">Ours · frame 1 of 20</span>
+          <span>Current input · recalled history · stream attention</span>
+        </figcaption>
+      </figure>
+
+      <div class="attention-playback">
+        <button
+          class="attention-play-button"
+          id="attention-play-button"
+          type="button"
+          aria-pressed="false"
+        >
+          <span class="attention-play-icon" aria-hidden="true"></span>
+          <span id="attention-play-label">Play trace</span>
+        </button>
+        <div class="attention-timeline">
+          <div class="attention-time-labels">
+            <span>Episode start</span>
+            <output id="attention-step" for="attention-slider">Frame 1 / 20</output>
+            <span>Episode end</span>
+          </div>
+          <label class="sr-only" for="attention-slider">Episode progress</label>
+          <input id="attention-slider" type="range" min="0" max="100" step="1" value="0">
+        </div>
+      </div>
+
+      <p class="attention-note">
+        Each retrieved card shows the top-attended item for its stream; <i>w</i> is its
+        attention weight, and the outline locates it in the temporal map.
+      </p>
+
+
+    </div>
   </div>
 </section>
 
@@ -106,8 +1114,8 @@
     <div class="result-highlight-grid" aria-label="Three result-highlight panels from the paper">
       <figure class="result-highlight-panel">
         <img
-          src="static/images/result-highlight-latency.png"
-          alt="Success versus inference latency result highlight"
+          src="static/images/result-highlight-latency.png?v=20261010-7.8x-sharp"
+          alt="Success versus inference latency highlight showing EventVLA as 7.8 times slower"
           loading="lazy"
           decoding="async"
         >
@@ -161,21 +1169,6 @@
       </ol>
     </div>
 
-    <nav class="experiment-index" aria-label="Experiment sections">
-      <div>
-        <strong>Evaluation</strong>
-        <a href="#rollout-explorer">Real world</a>
-        <a href="#rmbench-results">RMBench</a>
-        <a href="#robocasa-results">RoboCasa</a>
-        <a href="#inference-efficiency">Efficiency</a>
-      </div>
-      <div>
-        <strong>Ablations &amp; analysis</strong>
-        <a href="#memory-encoding">Encoding</a>
-        <a href="#memory-analysis">Attention</a>
-        <a href="#memory-learning">Learning</a>
-      </div>
-    </nav>
   </div>
 </section>
 
@@ -265,10 +1258,10 @@
               preload="none"
               data-preload="metadata"
             ></video>
-            <span>Matched demonstration</span>
+            <span>Matched external-view demonstration</span>
           </div>
           <figcaption id="fold-context-caption">
-            Orange towel · Style 1 · Head, left wrist, and right wrist views
+            Orange towel · Style 1 · External camera view
           </figcaption>
         </figure>
       </div>
@@ -658,21 +1651,36 @@
       <div class="robocasa-video-grid">
         <figure class="robocasa-video-card">
           <div class="robocasa-video-frame">
-            <video id="robocasa-video-left" controls muted playsinline preload="none"></video>
+            <video id="robocasa-video-left" controls muted playsinline preload="auto" aria-busy="true"></video>
+            <div class="robocasa-video-status" aria-live="polite">
+              <span class="robocasa-video-spinner" aria-hidden="true"></span>
+              <span class="robocasa-video-status-text">Loading rollout…</span>
+              <button class="robocasa-video-retry" type="button" hidden>Retry video</button>
+            </div>
             <span class="outcome-badge robocasa-outcome-badge is-success">Success</span>
           </div>
           <figcaption>Left agent view</figcaption>
         </figure>
         <figure class="robocasa-video-card">
           <div class="robocasa-video-frame">
-            <video id="robocasa-video-right" controls muted playsinline preload="none"></video>
+            <video id="robocasa-video-right" controls muted playsinline preload="auto" aria-busy="true"></video>
+            <div class="robocasa-video-status" aria-live="polite">
+              <span class="robocasa-video-spinner" aria-hidden="true"></span>
+              <span class="robocasa-video-status-text">Loading rollout…</span>
+              <button class="robocasa-video-retry" type="button" hidden>Retry video</button>
+            </div>
             <span class="outcome-badge robocasa-outcome-badge is-success">Success</span>
           </div>
           <figcaption>Right agent view</figcaption>
         </figure>
         <figure class="robocasa-video-card">
           <div class="robocasa-video-frame">
-            <video id="robocasa-video-wrist" controls muted playsinline preload="none"></video>
+            <video id="robocasa-video-wrist" controls muted playsinline preload="auto" aria-busy="true"></video>
+            <div class="robocasa-video-status" aria-live="polite">
+              <span class="robocasa-video-spinner" aria-hidden="true"></span>
+              <span class="robocasa-video-status-text">Loading rollout…</span>
+              <button class="robocasa-video-retry" type="button" hidden>Retry video</button>
+            </div>
             <span class="outcome-badge robocasa-outcome-badge is-success">Success</span>
           </div>
           <figcaption>Wrist view</figcaption>
@@ -939,44 +1947,6 @@
       15% → 35% → 100%, linking structured memory to better control.
     </p>
 
-    <div class="attention-explorer">
-      <div class="subsection-heading">
-        <div>
-          <p class="eyebrow">Interactive attention trace</p>
-          <h3>How attention changes through one Cover Blocks episode</h3>
-        </div>
-        <p>Select a training method and drag the episode timebar.</p>
-      </div>
-      <div class="attention-methods" role="tablist" aria-label="Memory training method">
-        <button type="button" role="tab" aria-selected="false" data-attention-method="e2e">E2E</button>
-        <button type="button" role="tab" aria-selected="false" data-attention-method="frozen">Frozen</button>
-        <button class="is-active" type="button" role="tab" aria-selected="true" data-attention-method="ours">Ours</button>
-      </div>
-      <div class="attention-stage">
-        <img
-          id="attention-frame"
-          src="static/images/attention/ours/frame-00.jpg?v=20260930-clear-labels"
-          alt="Attention visualization for jointly adapted IMPRINT at the beginning of the episode"
-          loading="lazy"
-          decoding="async"
-        >
-      </div>
-      <div class="attention-timeline">
-        <div class="attention-time-labels">
-          <span>Episode start</span>
-          <output id="attention-step" for="attention-slider">Frame 1 / 20</output>
-          <span>Episode end</span>
-        </div>
-        <label class="sr-only" for="attention-slider">Episode progress</label>
-        <input id="attention-slider" type="range" min="0" max="100" step="1" value="0">
-      </div>
-      <p class="attention-note">
-        Current-observation panels show the policy inputs at the selected action step.
-        Highest-attention panels show the top historical item within each stream, with
-        <i>w</i> reporting its attention weight. Action and robot-state selections are
-        visualized using the head-camera frame aligned to the selected timestep.
-      </p>
-    </div>
   </div>
 </section>
 
