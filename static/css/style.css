@@ -245,6 +245,78 @@ a:hover {
   color: #fdba74;
 }
 
+.hero-resource-links {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.72rem;
+  justify-content: center;
+  margin-top: 1.25rem;
+}
+
+.hero-resource-link {
+  align-items: center;
+  backdrop-filter: blur(14px);
+  background: rgba(8, 12, 17, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  color: #fff;
+  display: inline-flex;
+  font-size: 0.98rem;
+  font-weight: 650;
+  gap: 0.58rem;
+  min-width: 8rem;
+  padding: 0.56rem 1rem 0.56rem 0.62rem;
+  text-shadow: none;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.hero-resource-link:hover {
+  background: rgba(194, 65, 12, 0.92);
+  border-color: rgba(253, 186, 116, 0.9);
+  box-shadow: 0 11px 28px rgba(0, 0, 0, 0.28);
+  color: #fff;
+  text-decoration: none;
+  transform: translateY(-2px);
+}
+
+.hero-resource-link:focus-visible {
+  outline: 3px solid rgba(251, 146, 60, 0.52);
+  outline-offset: 3px;
+}
+
+.hero-resource-icon {
+  align-items: center;
+  background: rgba(251, 146, 60, 0.16);
+  border: 1px solid rgba(253, 186, 116, 0.42);
+  border-radius: 50%;
+  color: #fdba74;
+  display: inline-flex;
+  height: 2rem;
+  justify-content: center;
+  transition: background 160ms ease, color 160ms ease;
+  width: 2rem;
+}
+
+.hero-resource-link:hover .hero-resource-icon {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.hero-resource-icon svg {
+  height: 1.1rem;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  width: 1.1rem;
+}
+
 .links {
   display: flex;
   flex-wrap: wrap;
